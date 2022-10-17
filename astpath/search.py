@@ -192,7 +192,7 @@ def search(
                     for lineno, line in matching_lines:
                         print('{path}:{lineno}: {sep}\t{line}'.format(
                             path=os.path.abspath(filename) if abspaths else filename,
-                            lineno=lineno,
+                            lineno=lineno + 1,
                             sep='>' if lineno == match - 1 else ' ',
                             line=line,
                         ))
