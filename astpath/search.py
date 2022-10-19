@@ -78,17 +78,18 @@ if XML_VERSION is XMLVersions.LXML:
 def find_in_ast(xml_ast, expr, query=_query_factory(), node_mappings=None):
     """Find items matching expression expr in an XML AST."""
     results = query(xml_ast, expr)
-    return linenos_from_xml(results, query=query, node_mappings=node_mappings)
+    return positions_from_xml(results, query=query, node_mappings=node_mappings)
 
 
-def linenos_from_xml(elements, query=_query_factory(), node_mappings=None):
-    """Given a list of elements, return a list of line numbers."""
-    lines = []
+def positions_from_xml(elements, query=_query_factory(), node_mappings=None):
+    """Given a list of elements, return a list of (line, col) numbers."""
+    positions = []
     for element in elements:
         try:
             linenos = query(element, './ancestor-or-self::*[@lineno][1]/@lineno')
+            col_offsets = query(element, './ancestor-or-self::*[@col_offset][1]/@col_offset')
         except AttributeError:
-            raise AttributeError("Element has no ancestor with line number.")
+            raise AttributeError("Element has no ancestor with line number/col offset")
         except SyntaxError:
             # we're not using lxml backend
             if node_mappings is None:
@@ -97,10 +98,11 @@ def linenos_from_xml(elements, query=_query_factory(), node_mappings=None):
                     "backend without `node_mappings` supplied."
                 )
             linenos = getattr(node_mappings[element], 'lineno', 0),
+            col_offsets = None
 
-        if linenos:
-            lines.append(int(linenos[0]))
-    return lines
+        if linenos and col_offsets:
+            positions.append((int(linenos[0]), int(col_offsets[0])))
+    return positions
 
 
 def file_contents_to_xml_ast(contents, omit_docstrings=False, node_mappings=None, filename='<unknown>'):
@@ -181,19 +183,20 @@ def search(
                 for element in matching_elements:
                     print(tostring(xml_ast, pretty_print=True))
 
-            matching_lines = linenos_from_xml(matching_elements, query=query, node_mappings=node_mappings)
-            global_matches.extend(zip(repeat(filename), matching_lines))
+            matching_positions = positions_from_xml(matching_elements, query=query, node_mappings=node_mappings)
+            global_matches.extend(zip(repeat(filename), matching_positions))
 
             if print_matches:
-                for match in matching_lines:
+                for (matched_lineno, col_offset) in matching_positions:
                     matching_lines = list(context(
-                        file_lines, match - 1, before_context, after_context
+                        file_lines, matched_lineno - 1, before_context, after_context
                     ))
                     for lineno, line in matching_lines:
-                        print('{path}:{lineno}: {sep}\t{line}'.format(
+                        print('{path}:{lineno}:{colno}:{line}'.format(
                             path=os.path.abspath(filename) if abspaths else filename,
                             lineno=lineno + 1,
-                            sep='>' if lineno == match - 1 else ' ',
+                            colno=col_offset + 1,
+                            sep='>' if lineno == matched_lineno - 1 else ' ',
                             line=line,
                         ))
                     if before_context or after_context:
