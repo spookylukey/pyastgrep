@@ -110,7 +110,7 @@ def search(
 
             if print_xml:
                 for element in matching_elements:
-                    print(xml.tostring(xml_ast, pretty_print=True))
+                    print(xml.tostring(element, pretty_print=True).decode('utf-8'))
 
             matching_positions = positions_from_xml(matching_elements, node_mappings=node_mappings)
             global_matches.extend(zip(repeat(filename), matching_positions))
