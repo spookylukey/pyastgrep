@@ -104,13 +104,8 @@ $ astpath "//ClassDef[re:match('.*Var', @name)]" | head -5
 ```
 
 ## Installation
-It is recommended that `astpath` be installed with the optional `lxml` dependency, to allow full use of the XPath query language. 
-To do so,
-```
-pip install astpath[xpath]
-```
 
-Alternatively, a no-dependency version using Python's builtin XPath subset can be installed via
+Using pip:
 ```
 pip install astpath
 ```

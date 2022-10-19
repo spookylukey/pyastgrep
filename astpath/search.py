@@ -2,103 +2,34 @@
 
 
 from __future__ import print_function
-from itertools import islice, repeat
-import os
-import re
+
 import ast
+import os
+from itertools import islice, repeat
 
-from astpath.asts import convert_to_xml
+from . import xml
 
-
-class XMLVersions:
-    LXML = object()
-    XML = object()
-
-
-try:
-    from lxml.etree import tostring
-    from lxml import etree
-    XML_VERSION = XMLVersions.LXML
-except ImportError:
-    from xml.etree.ElementTree import tostring
-    XML_VERSION = XMLVersions.XML
+from .asts import convert_to_xml
 
 
 PYTHON_EXTENSION = '{}py'.format(os.path.extsep)
 
 
-def _query_factory(verbose=False):
-    def lxml_query(element, expression):
-        return element.xpath(expression)
-
-    def xml_query(element, expression):
-        return element.findall(expression)
-
-    if XML_VERSION is XMLVersions.LXML:
-        return lxml_query
-    else:
-        if verbose:
-            print(
-                "WARNING: lxml could not be imported, "
-                "falling back to native XPath engine."
-            )
-        return xml_query
-
-
-def _tostring_factory():
-    def xml_tostring(*args, **kwargs):
-        kwargs.pop('pretty_print')
-        return tostring(*args, **kwargs)
-
-    if XML_VERSION is XMLVersions.LXML:
-        return tostring
-    else:
-        return xml_tostring
-
-
-if XML_VERSION is XMLVersions.LXML:
-    regex_ns = etree.FunctionNamespace('https://github.com/hchasestevens/astpath')
-    regex_ns.prefix = 're'
-
-    @regex_ns
-    def match(ctx, pattern, strings):
-        return any(
-            re.match(pattern, s) is not None
-            for s in strings
-        )
-
-    @regex_ns
-    def search(ctx, pattern, strings):
-        return any(
-            re.search(pattern, s) is not None
-            for s in strings
-        )
-
-
-def find_in_ast(xml_ast, expr, query=_query_factory(), node_mappings=None):
+def find_in_ast(xml_ast, expr, node_mappings=None):
     """Find items matching expression expr in an XML AST."""
-    results = query(xml_ast, expr)
-    return positions_from_xml(results, query=query, node_mappings=node_mappings)
+    results = xml.lxml_query(xml_ast, expr)
+    return positions_from_xml(results, node_mappings=node_mappings)
 
 
-def positions_from_xml(elements, query=_query_factory(), node_mappings=None):
+def positions_from_xml(elements, node_mappings=None):
     """Given a list of elements, return a list of (line, col) numbers."""
     positions = []
     for element in elements:
         try:
-            linenos = query(element, './ancestor-or-self::*[@lineno][1]/@lineno')
-            col_offsets = query(element, './ancestor-or-self::*[@col_offset][1]/@col_offset')
+            linenos = xml.lxml_query(element, './ancestor-or-self::*[@lineno][1]/@lineno')
+            col_offsets = xml.lxml_query(element, './ancestor-or-self::*[@col_offset][1]/@col_offset')
         except AttributeError:
             raise AttributeError("Element has no ancestor with line number/col offset")
-        except SyntaxError:
-            # we're not using lxml backend
-            if node_mappings is None:
-                raise ValueError(
-                    "Lines cannot be returned when using native "
-                    "backend without `node_mappings` supplied."
-                )
-            linenos = getattr(node_mappings[element], 'lineno', 0),
-            col_offsets = None
 
         if linenos and col_offsets:
             positions.append((int(linenos[0]), int(col_offsets[0])))
@@ -138,7 +69,6 @@ def search(
     Only for files in the given directory for items matching the specified
     expression.
     """
-    query = _query_factory(verbose=verbose)
 
     if os.path.isfile(directory):
         if recurse:
@@ -176,14 +106,13 @@ def search(
                     ))
                 continue  # unparseable
 
-            matching_elements = query(xml_ast, expression)
+            matching_elements = xml.lxml_query(xml_ast, expression)
 
             if print_xml:
-                tostring = _tostring_factory()
                 for element in matching_elements:
-                    print(tostring(xml_ast, pretty_print=True))
+                    print(xml.tostring(xml_ast, pretty_print=True))
 
-            matching_positions = positions_from_xml(matching_elements, query=query, node_mappings=node_mappings)
+            matching_positions = positions_from_xml(matching_elements, node_mappings=node_mappings)
             global_matches.extend(zip(repeat(filename), matching_positions))
 
             if print_matches:
