@@ -110,11 +110,10 @@ Using pip:
 pip install astpath
 ```
 
-`astpath` supports both Python 2.7 and 3.x.
 
 ## Links
 * [Green tree snakes](https://greentreesnakes.readthedocs.io/en/latest/) - a very readable overview of Python ASTs.
-* Official `ast` module documentation for [Python 2.7](https://docs.python.org/2.7/library/ast.html) and [Python 3.X](https://docs.python.org/3/library/ast.html).
+*  `ast` module documentation for [Python 3.X](https://docs.python.org/3/library/ast.html).
 * [Python AST Explorer](https://python-ast-explorer.com/) for worked examples of ASTs.
 * A [brief guide to XPath](http://www.w3schools.com/xml/xpath_syntax.asp).
 * [`bellybutton`](https://github.com/hchasestevens/bellybutton), a fully-featured linting engine built on `astpath`.
