@@ -5,6 +5,22 @@ pyastgrep
 
 A command-line utility for querying Python ASTs using XPath syntax.
 
+
+TODO
+----
+
+
+* Change examples to match current output
+
+* Clean up command line args to match grep/ripgrep
+
+* Ignore files/directories that are ignored by ripgrep by default
+
+* Test suite!
+
+* Docs, especially about XML output and different Python AST versions
+
+
 Example usage
 -------------
 
@@ -135,15 +151,10 @@ isolated environment:
 Links
 -----
 
--  `Green tree
-   snakes <https://greentreesnakes.readthedocs.io/en/latest/>`__ - a
-   very readable overview of Python ASTs.
--  ``ast`` module documentation for `Python
-   3.X <https://docs.python.org/3/library/ast.html>`__.
--  `Python AST Explorer <https://python-ast-explorer.com/>`__ for worked
-   examples of ASTs.
--  A `brief guide to
-   XPath <http://www.w3schools.com/xml/xpath_syntax.asp>`__.
+-  `Green tree snakes <https://greentreesnakes.readthedocs.io/en/latest/>`__ - a very readable overview of Python ASTs.
+-  ``ast`` module documentation for `Python 3.X <https://docs.python.org/3/library/ast.html>`__.
+-  `Python AST Explorer <https://python-ast-explorer.com/>`__ for worked  examples of ASTs.
+-  A `brief guide to XPath <http://www.w3schools.com/xml/xpath_syntax.asp>`__.
 
 History
 -------
