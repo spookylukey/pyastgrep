@@ -25,6 +25,7 @@ parser.add_argument('-d', '--dir', help="search directory or file", default='.',
 parser.add_argument('-A', '--after-context', help="lines of context to display after matching line", type=int, default=0,)
 parser.add_argument('-B', '--before-context', help="lines of context to display after matching line", type=int, default=0,)
 parser.add_argument('-C', '--context', help="lines of context to display before and after matching line", type=int, default=0,)
+parser.add_argument('--xpath2', help="Use XPath 2.0 functions. This currently makes matching significantly slower", action='store_true', default=False)
 parser.add_argument('expr', help="search expression", nargs='+',)
 
 
@@ -55,6 +56,7 @@ def main():
         recurse=recurse,
         before_context=before_context,
         after_context=after_context,
+        xpath2=args.xpath2,
     )
 
 

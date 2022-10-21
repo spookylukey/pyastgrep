@@ -15,12 +15,6 @@ from .asts import convert_to_xml
 PYTHON_EXTENSION = '{}py'.format(os.path.extsep)
 
 
-def find_in_ast(xml_ast, expr, node_mappings=None):
-    """Find items matching expression expr in an XML AST."""
-    results = xml.lxml_query(xml_ast, expr)
-    return positions_from_xml(results, node_mappings=node_mappings)
-
-
 def positions_from_xml(elements, node_mappings=None):
     """Given a list of elements, return a list of (line, col) numbers."""
     positions = []
@@ -58,10 +52,18 @@ def file_to_xml_ast(filename, omit_docstrings=False, node_mappings=None):
     )
 
 
+def get_query_func(*, xpath2: bool):
+    if xpath2:
+        return xml.elementpath_query
+    else:
+        return xml.lxml_query
+
+
 def search(
         directory, expression, print_matches=False, print_xml=False,
         verbose=False, abspaths=False, recurse=True,
-        before_context=0, after_context=0, extension=PYTHON_EXTENSION
+        before_context=0, after_context=0, extension=PYTHON_EXTENSION,
+        xpath2=False,
 ):
     """
     Perform a recursive search through Python files.
@@ -69,7 +71,8 @@ def search(
     Only for files in the given directory for items matching the specified
     expression.
     """
-
+    query_func = get_query_func(xpath2=xpath2)
+    
     if os.path.isfile(directory):
         if recurse:
             raise ValueError("Cannot recurse when only a single file is specified.")
@@ -106,7 +109,7 @@ def search(
                     ))
                 continue  # unparseable
 
-            matching_elements = xml.lxml_query(xml_ast, expression)
+            matching_elements = query_func(xml_ast, expression)
 
             if print_xml:
                 for element in matching_elements:
