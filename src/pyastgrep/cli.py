@@ -9,24 +9,80 @@ For more help use::
 
 """
 
-import os
 import argparse
+import os
 
 from pyastgrep.search import search
 
-
 parser = argparse.ArgumentParser()
-parser.add_argument('-q', '--quiet', help="hide output of matches", action='store_true',)
-parser.add_argument('-v', '--verbose', help="increase output verbosity", action='store_true',)
-parser.add_argument('-x', '--xml', help="print only the matching XML elements", action='store_true',)
-parser.add_argument('-a', '--abspaths', help="show absolute paths", action='store_true',)
-parser.add_argument('-R', '--no-recurse', help="ignore subdirectories, searching only files in the specified directory", action='store_true',)
-parser.add_argument('-d', '--dir', help="search directory or file", default='.',)
-parser.add_argument('-A', '--after-context', help="lines of context to display after matching line", type=int, default=0,)
-parser.add_argument('-B', '--before-context', help="lines of context to display after matching line", type=int, default=0,)
-parser.add_argument('-C', '--context', help="lines of context to display before and after matching line", type=int, default=0,)
-parser.add_argument('--xpath2', help="Use XPath 2.0 functions. This currently makes matching significantly slower", action='store_true', default=False)
-parser.add_argument('expr', help="search expression", nargs='+',)
+parser.add_argument(
+    "-q",
+    "--quiet",
+    help="hide output of matches",
+    action="store_true",
+)
+parser.add_argument(
+    "-v",
+    "--verbose",
+    help="increase output verbosity",
+    action="store_true",
+)
+parser.add_argument(
+    "-x",
+    "--xml",
+    help="print only the matching XML elements",
+    action="store_true",
+)
+parser.add_argument(
+    "-a",
+    "--abspaths",
+    help="show absolute paths",
+    action="store_true",
+)
+parser.add_argument(
+    "-R",
+    "--no-recurse",
+    help="ignore subdirectories, searching only files in the specified directory",
+    action="store_true",
+)
+parser.add_argument(
+    "-d",
+    "--dir",
+    help="search directory or file",
+    default=".",
+)
+parser.add_argument(
+    "-A",
+    "--after-context",
+    help="lines of context to display after matching line",
+    type=int,
+    default=0,
+)
+parser.add_argument(
+    "-B",
+    "--before-context",
+    help="lines of context to display after matching line",
+    type=int,
+    default=0,
+)
+parser.add_argument(
+    "-C",
+    "--context",
+    help="lines of context to display before and after matching line",
+    type=int,
+    default=0,
+)
+parser.add_argument(
+    "--xpath2",
+    help="Use XPath 2.0 functions. This currently makes matching significantly slower",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
+    "expr",
+    help="search expression",
+    nargs="+",
+)
 
 
 def main():
@@ -48,7 +104,7 @@ def main():
 
     search(
         args.dir,
-        ' '.join(args.expr),
+        " ".join(args.expr),
         print_xml=args.xml,
         print_matches=not args.quiet,
         verbose=args.verbose,
