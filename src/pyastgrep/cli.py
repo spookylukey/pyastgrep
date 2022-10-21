@@ -5,14 +5,14 @@ The Command Line Interface using argparse.
 
 For more help use::
 
-    astpath -h
+    pyastgrep -h
 
 """
 
 import os
 import argparse
 
-from astpath.search import search
+from pyastgrep.search import search
 
 
 parser = argparse.ArgumentParser()

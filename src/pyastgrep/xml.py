@@ -16,7 +16,7 @@ def elementpath_query(element, expression):
 
 
 
-regex_ns = etree.FunctionNamespace('https://github.com/hchasestevens/astpath')
+regex_ns = etree.FunctionNamespace('https://github.com/spookylukey/pyastgrep')
 regex_ns.prefix = 're'
 
 
