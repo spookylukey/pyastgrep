@@ -1,7 +1,12 @@
 pyastgrep
 =========
 
-|PyPI version|
+
+.. image:: https://badge.fury.io/py/pyastgrep.svg
+     :target: https://badge.fury.io/py/pyastgrep
+
+.. image:: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml/badge.svg
+     :target: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml
 
 A command-line utility for grepping Python files using XPath syntax against the Python AST.
 
@@ -177,6 +182,3 @@ History
 
 This project was forked from https://github.com/hchasestevens/astpath by
 `H. Chase Stevens <http://www.chasestevens.com>`__
-
-.. |PyPI version| image:: https://badge.fury.io/py/pyastgrep.svg
-   :target: https://badge.fury.io/py/pyastgrep
