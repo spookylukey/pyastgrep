@@ -3,7 +3,7 @@ pyastgrep
 
 |PyPI version|
 
-A command-line utility for querying Python ASTs using XPath syntax.
+A command-line utility for grepping Python files using XPath syntax against the Python AST.
 
 
 TODO
@@ -148,12 +148,28 @@ isolated environment:
    pipx install pyastgrep
 
 
+Contributing
+------------
+
+Get test suite running::
+
+  pip install -r requirements-test.txt
+  pytest
+
+Run against all versions::
+
+  pip install tox
+  tox
+
+
+Install
+
 Links
 -----
 
--  `Green tree snakes <https://greentreesnakes.readthedocs.io/en/latest/>`__ - a very readable overview of Python ASTs.
--  ``ast`` module documentation for `Python 3.X <https://docs.python.org/3/library/ast.html>`__.
--  `Python AST Explorer <https://python-ast-explorer.com/>`__ for worked  examples of ASTs.
+- `Green tree snakes <https://greentreesnakes.readthedocs.io/en/latest/>`__ - a very readable overview of Python ASTs.
+- `ast module documentation <https://docs.python.org/3/library/ast.html>`__.
+- `Python AST Explorer <https://python-ast-explorer.com/>`__ for worked  examples of ASTs.
 -  A `brief guide to XPath <http://www.w3schools.com/xml/xpath_syntax.asp>`__.
 
 History

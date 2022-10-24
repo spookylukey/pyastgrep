@@ -14,7 +14,7 @@ import os
 
 from pyastgrep.search import search
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(description="Grep Python files uses XPath expressions against the AST")
 parser.add_argument(
     "-q",
     "--quiet",
@@ -80,14 +80,14 @@ parser.add_argument(
 )
 parser.add_argument(
     "expr",
-    help="search expression",
+    help="XPath search expression",
     nargs="+",
 )
 
 
-def main():
+def main(sys_args=None):
     """Entrypoint for CLI."""
-    args = parser.parse_args()
+    args = parser.parse_args(args=sys_args)
 
     if os.path.isfile(args.dir):
         recurse = False
