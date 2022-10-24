@@ -32,12 +32,15 @@ To get started, dump out the XML structure of top-level statements in a Python f
        <alias lineno="1" col_offset="7" type="str" name="os"/>
      </names>
    </Import>
+   ...
+
+This should help in writing XPath expressions.
 
 Note that the XML format is a very direct translation of the Python AST as
 produced by the ast module. This AST is not stable across Python versions,
 so the XML is not stable either.
 
-Finding all usages of a function called ``open``:*
+Finding all usages of a function called ``open``:
 
 .. code:: bash
 
@@ -56,7 +59,7 @@ Integers that are not assigned to a variable:
 
 .. code:: bash
 
-Names longer than 22 characters:*
+Names longer than 22 characters:
 
 .. code:: bash
 
@@ -69,7 +72,7 @@ Find ``except`` clauses that raise a different exception class than they catch:
 
    $ pyastgrep "//ExceptHandler[body//Raise/exc//Name and not(contains(body//Raise/exc//Name/@id, type/Name/@id))]"
 
-Classes matching a regular expression:*
+Classes matching a regular expression:
 
 .. code:: bash
 
