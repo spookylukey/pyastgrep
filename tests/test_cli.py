@@ -34,9 +34,15 @@ def assert_stdout(capsys, args, contains=None, does_not_contain=None):
     output = capsys.readouterr().out
     with capsys.disabled():
         if contains is not None:
-            assert contains in output
+            if not isinstance(contains, list):
+                contains = [contains]
+            for text in contains:
+                assert text in output
         if does_not_contain is not None:
-            assert does_not_contain not in output
+            if not isinstance(does_not_contain, list):
+                does_not_contain = [does_not_contain]
+            for text in does_not_contain:
+                assert text not in output
 
 
 @pytest.mark.parametrize("arg", ["-h", "--help"])
@@ -49,3 +55,23 @@ def test_search(capsys):
     # which could happen if CWD is wrong.
     assert_stdout(capsys, [".//*"], does_not_contain="Not real code")
     assert_stdout(capsys, [".//Name"], contains="./misc.py:3:12:    return an_arg")
+
+
+def test_search_file(capsys):
+    assert_stdout(
+        capsys,
+        [".//Name", "misc.py"],
+        contains="return an_arg",
+        does_not_contain="return another_arg",
+    )
+
+
+def test_search_files(capsys):
+    assert_stdout(
+        capsys,
+        [".//Name", "misc.py", "other.py"],
+        contains=[
+            "return an_arg",
+            "return another_arg",
+        ],
+    )

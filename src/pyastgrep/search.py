@@ -1,7 +1,6 @@
 """Functions for searching the XML from file, file contents, or directory."""
-
-
 import ast
+import glob
 import os
 from itertools import islice, repeat
 
@@ -55,14 +54,22 @@ def get_query_func(*, xpath2: bool):
         return xml.lxml_query
 
 
+def get_files_to_search(paths):
+    for path in paths:
+        # TODO handle missing files by yielding some kind of error object
+        if os.path.isfile(path):
+            yield path
+        else:
+            yield from glob.glob(path + "/**/*.py", recursive=True)
+
+
 def search(
-    directory,
+    paths,
     expression,
     print_matches=False,
     print_xml=False,
     verbose=False,
     abspaths=False,
-    recurse=True,
     before_context=0,
     after_context=0,
     extension=PYTHON_EXTENSION,
@@ -76,72 +83,53 @@ def search(
     """
     query_func = get_query_func(xpath2=xpath2)
 
-    if os.path.isfile(directory):
-        if recurse:
-            raise ValueError("Cannot recurse when only a single file is specified.")
-        files = (("", None, [directory]),)
-    elif recurse:
-        files = os.walk(directory)
-    else:
-        files = (
-            (
-                directory,
-                None,
-                [item for item in os.listdir(directory) if os.path.isfile(os.path.join(directory, item))],
-            ),
-        )
     global_matches = []
-    for root, __, filenames in files:
-        python_filenames = (os.path.join(root, filename) for filename in filenames if filename.endswith(extension))
-        for filename in python_filenames:
-            node_mappings = {}
-            try:
-                with open(filename) as f:
-                    contents = f.read()
-                file_lines = contents.splitlines()
-                xml_ast = file_contents_to_xml_ast(
-                    contents,
-                    node_mappings=node_mappings,
+    for filename in get_files_to_search(paths):
+        print(filename)
+        node_mappings = {}
+        try:
+            with open(filename) as f:
+                contents = f.read()
+            file_lines = contents.splitlines()
+            xml_ast = file_contents_to_xml_ast(
+                contents,
+                node_mappings=node_mappings,
+            )
+        except Exception:
+            if verbose:
+                print(f"WARNING: Unable to parse or read {os.path.abspath(filename) if abspaths else filename}")
+            continue  # unparseable
+
+        matching_elements = query_func(xml_ast, expression)
+
+        if print_xml:
+            for element in matching_elements:
+                print(xml.tostring(element, pretty_print=True).decode("utf-8"))
+
+        matching_positions = positions_from_xml(matching_elements, node_mappings=node_mappings)
+        global_matches.extend(zip(repeat(filename), matching_positions))
+
+        if print_matches:
+            for (matched_lineno, col_offset) in matching_positions:
+                matching_lines = list(
+                    context(
+                        file_lines,
+                        matched_lineno - 1,
+                        before_context,
+                        after_context,
+                    )
                 )
-            except Exception:
-                if verbose:
+                for lineno, line in matching_lines:
                     print(
-                        "WARNING: Unable to parse or read {}".format(
-                            os.path.abspath(filename) if abspaths else filename
+                        "{path}:{lineno}:{colno}:{line}".format(
+                            path=os.path.abspath(filename) if abspaths else filename,
+                            lineno=lineno + 1,
+                            colno=col_offset + 1,
+                            line=line,
                         )
                     )
-                continue  # unparseable
-
-            matching_elements = query_func(xml_ast, expression)
-
-            if print_xml:
-                for element in matching_elements:
-                    print(xml.tostring(element, pretty_print=True).decode("utf-8"))
-
-            matching_positions = positions_from_xml(matching_elements, node_mappings=node_mappings)
-            global_matches.extend(zip(repeat(filename), matching_positions))
-
-            if print_matches:
-                for (matched_lineno, col_offset) in matching_positions:
-                    matching_lines = list(
-                        context(
-                            file_lines,
-                            matched_lineno - 1,
-                            before_context,
-                            after_context,
-                        )
-                    )
-                    for lineno, line in matching_lines:
-                        print(
-                            "{path}:{lineno}:{colno}:{line}".format(
-                                path=os.path.abspath(filename) if abspaths else filename,
-                                lineno=lineno + 1,
-                                colno=col_offset + 1,
-                                line=line,
-                            )
-                        )
-                    if before_context or after_context:
-                        print()
+                if before_context or after_context:
+                    print()
 
     return global_matches
 

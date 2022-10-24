@@ -10,7 +10,6 @@ For more help use::
 """
 
 import argparse
-import os
 
 from pyastgrep.search import search
 
@@ -46,12 +45,6 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "-d",
-    "--dir",
-    help="search directory or file",
-    default=".",
-)
-parser.add_argument(
     "-A",
     "--after-context",
     help="lines of context to display after matching line",
@@ -81,7 +74,11 @@ parser.add_argument(
 parser.add_argument(
     "expr",
     help="XPath search expression",
-    nargs="+",
+)
+parser.add_argument(
+    "path",
+    help="Files or directory to search, defaults to current directory",
+    nargs="*",
 )
 
 
@@ -89,27 +86,23 @@ def main(sys_args=None):
     """Entrypoint for CLI."""
     args = parser.parse_args(args=sys_args)
 
-    if os.path.isfile(args.dir):
-        recurse = False
-        if not args.no_recurse and args.verbose:
-            print("WARNING: Not recursing, as a single file was passed.")
-    else:
-        recurse = not args.no_recurse
-
     before_context = args.before_context or args.context
     after_context = args.after_context or args.context
     if (before_context or after_context) and args.quiet:
         print("ERROR: Context cannot be specified when suppressing output.")
         exit(1)
 
+    if len(args.path) == 0:
+        paths = ["."]
+    else:
+        paths = args.path
     search(
-        args.dir,
-        " ".join(args.expr),
+        paths,
+        args.expr,
         print_xml=args.xml,
         print_matches=not args.quiet,
         verbose=args.verbose,
         abspaths=args.abspaths,
-        recurse=recurse,
         before_context=before_context,
         after_context=after_context,
         xpath2=args.xpath2,
