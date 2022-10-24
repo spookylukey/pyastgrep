@@ -4,19 +4,21 @@ from __future__ import annotations
 import ast
 import glob
 import os
-from itertools import islice, repeat
+from itertools import islice
 from pathlib import Path
-from typing import Any, Callable, Generator, Tuple
+from typing import Any, Callable, Generator
 
+from attr import dataclass
 from lxml.etree import _Element
 
 from . import xml
 from .asts import convert_to_xml
 
-PYTHON_EXTENSION = f"{os.path.extsep}py"
 
-
-Position = Tuple[int, int]
+@dataclass
+class Position:
+    lineno: int  # 1-indexed, as per AST
+    col_offset: int  # 0-indexed, as per AST
 
 
 def positions_from_xml(
@@ -33,7 +35,7 @@ def positions_from_xml(
             raise AttributeError("Element has no ancestor with line number/col offset")
 
         if linenos and col_offsets:
-            positions.append((int(linenos[0]), int(col_offsets[0])))
+            positions.append(Position(int(linenos[0]), int(col_offsets[0])))
     return positions
 
 
@@ -49,18 +51,6 @@ def file_contents_to_xml_ast(
         parsed_ast,
         omit_docstrings=omit_docstrings,
         node_mappings=node_mappings,
-    )
-
-
-def file_to_xml_ast(filename, omit_docstrings=False, node_mappings=None):
-    """Convert a file to an XML AST, for use with find_in_ast."""
-    with open(filename) as f:
-        contents = f.read()
-    return file_contents_to_xml_ast(
-        contents,
-        omit_docstrings=omit_docstrings,
-        node_mappings=node_mappings,
-        filename=filename,
     )
 
 
@@ -81,20 +71,20 @@ def get_files_to_search(paths: list[str]) -> Generator[Path, None, None]:
                 yield Path(filename)
 
 
-Match = Tuple[Path, Position]
+@dataclass
+class Match:
+    path: Path
+    file_lines: list[str]
+    position: Position
 
 
 def search(
     paths: list[str],
     expression: str,
-    print_matches: bool = False,
-    print_xml: bool = False,
-    verbose: bool = False,
     before_context: int = 0,
     after_context: int = 0,
-    extension: str = PYTHON_EXTENSION,
     xpath2: bool = False,
-) -> list[Match]:
+) -> Generator[Match, None, None]:
     """
     Perform a recursive search through Python files.
 
@@ -103,9 +93,7 @@ def search(
     """
     query_func = get_query_func(xpath2=xpath2)
 
-    global_matches: list[Match] = []
     for path in get_files_to_search(paths):
-        print(path)
         node_mappings: dict[_Element, ast.AST] = {}
         try:
             with open(path) as f:
@@ -116,35 +104,14 @@ def search(
                 node_mappings=node_mappings,
             )
         except Exception:
-            if verbose:
-                print(f"WARNING: Unable to parse or read {os.path.abspath(path)}")
+            # TODO yield warning
             continue  # unparseable
 
         matching_elements = query_func(xml_ast, expression)
-
-        if print_xml:
-            for element in matching_elements:
-                print(xml.tostring(element, pretty_print=True).decode("utf-8"))
-
         matching_positions: list[Position] = positions_from_xml(matching_elements, node_mappings=node_mappings)
-        global_matches.extend(zip(repeat(path), matching_positions))
 
-        if print_matches:
-            for (matched_lineno, col_offset) in matching_positions:
-                matching_lines = list(
-                    context(
-                        file_lines,
-                        matched_lineno - 1,
-                        before_context,
-                        after_context,
-                    )
-                )
-                for lineno, line in matching_lines:
-                    print(f"{path}:{lineno + 1}:{col_offset + 1}:{line}")
-                if before_context or after_context:
-                    print()
-
-    return global_matches
+        for position in matching_positions:
+            yield Match(path, file_lines, position)
 
 
 def context(lines: list[str], index: int, before: int = 0, after: int = 0, both: int = 0) -> islice:

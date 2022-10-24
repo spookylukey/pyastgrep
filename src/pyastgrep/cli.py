@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 
+from pyastgrep.printer import print_results
 from pyastgrep.search import search
 
 parser = argparse.ArgumentParser(description="Grep Python files uses XPath expressions against the AST")
@@ -91,15 +92,15 @@ def main(sys_args: list[str] | None = None) -> None:
         paths = ["."]
     else:
         paths = args.path
-    search(
-        paths,
-        args.expr,
+    print_results(
+        search(
+            paths,
+            args.expr,
+            xpath2=args.xpath2,
+        ),
         print_xml=args.xml,
-        print_matches=not args.quiet,
-        verbose=args.verbose,
         before_context=before_context,
         after_context=after_context,
-        xpath2=args.xpath2,
     )
 
 
