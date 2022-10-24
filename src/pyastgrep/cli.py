@@ -10,6 +10,7 @@ For more help use::
 from __future__ import annotations
 
 import argparse
+import sys
 
 from pyastgrep.printer import print_results
 from pyastgrep.search import search_python_files
@@ -76,32 +77,44 @@ parser.add_argument(
     nargs="*",
 )
 
+MATCH_FOUND = 0
+NO_MATCH_FOUND = 1
+ERROR = 2
 
-def main(sys_args: list[str] | None = None) -> None:
+
+def main(sys_args: list[str] | None = None) -> int:
     """Entrypoint for CLI."""
     args = parser.parse_args(args=sys_args)
 
     before_context = args.before_context or args.context
     after_context = args.after_context or args.context
     if (before_context or after_context) and args.quiet:
-        print("ERROR: Context cannot be specified when suppressing output.")
-        exit(1)
+        print("ERROR: Context cannot be specified when suppressing output.", file=sys.stderr)
+        return ERROR
 
     if len(args.path) == 0:
         paths = ["."]
     else:
         paths = args.path
-    print_results(
+
+    matches, errors = print_results(
         search_python_files(
             paths,
             args.expr,
             xpath2=args.xpath2,
         ),
         print_xml=args.xml,
+        quiet=args.quiet,
         before_context=before_context,
         after_context=after_context,
     )
+    # Match ripgrep:
+    if errors and not args.quiet:
+        return ERROR
+    elif matches:
+        return MATCH_FOUND
+    return NO_MATCH_FOUND
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
