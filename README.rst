@@ -26,7 +26,7 @@ TODO
 DONE
 ----
 
-* Clean up command line args to match grep/ripgrep__
+* Clean up command line args to match grep/ripgrep
 
 * Test suite!
 
