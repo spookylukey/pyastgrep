@@ -148,6 +148,22 @@ isolated environment:
    pipx install pyastgrep
 
 
+Contributing
+------------
+
+Get test suite running::
+
+  pip install -r requirements-test.txt
+  pytest
+
+Run against all versions::
+
+  pip install tox
+  tox
+
+
+Install
+
 Links
 -----
 
