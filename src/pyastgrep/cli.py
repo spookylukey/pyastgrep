@@ -23,20 +23,8 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "-v",
-    "--verbose",
-    help="increase output verbosity",
-    action="store_true",
-)
-parser.add_argument(
     "--xml",
     help="print the matching XML elements",
-    action="store_true",
-)
-parser.add_argument(
-    "-R",
-    "--no-recurse",
-    help="ignore subdirectories, searching only files in the specified directory",
     action="store_true",
 )
 parser.add_argument(
