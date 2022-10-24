@@ -1,5 +1,4 @@
 #!/usr/bin/python
-
 """
 The Command Line Interface using argparse.
 
@@ -8,6 +7,7 @@ For more help use::
     pyastgrep -h
 
 """
+from __future__ import annotations
 
 import argparse
 
@@ -82,7 +82,7 @@ parser.add_argument(
 )
 
 
-def main(sys_args=None):
+def main(sys_args: list[str] | None = None):
     """Entrypoint for CLI."""
     args = parser.parse_args(args=sys_args)
 

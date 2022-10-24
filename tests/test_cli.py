@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import contextlib
 import os
 import os.path
@@ -7,15 +9,15 @@ import pytest
 from pyastgrep.cli import main
 
 if hasattr(contextlib, "chdir"):
-    chdir = contextlib.chdir
+    chdir = contextlib.chdir  # type: ignore[attr-defined]
 else:
     # Python < 3.11
-    class chdir(contextlib.AbstractContextManager):
+    class chdir(contextlib.AbstractContextManager):  # type: ignore[no-redef]
         """Non thread-safe context manager to change the current working directory."""
 
-        def __init__(self, path):
+        def __init__(self, path: str):
             self.path = path
-            self._old_cwd = []
+            self._old_cwd: list[str] = []
 
         def __enter__(self):
             self._old_cwd.append(os.getcwd())
@@ -25,7 +27,9 @@ else:
             os.chdir(self._old_cwd.pop())
 
 
-def assert_stdout(capsys, args, contains=None, does_not_contain=None):
+def assert_stdout(
+    capsys, args: list[str], contains: str | list[str] | None = None, does_not_contain: str | list[str] | None = None
+):
     try:
         with chdir(os.path.dirname(__file__) + "/examples/test_cli"):
             main(args)

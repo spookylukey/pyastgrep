@@ -138,6 +138,8 @@ than they catch:*
 Installation
 ------------
 
+Python 3.7+ required.
+
 Using pip:
 
 ::
