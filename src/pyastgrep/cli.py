@@ -61,7 +61,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--xpath2",
-    help="Use XPath 2.0 functions. This currently makes matching significantly slower",
+    help="Use XPath 2.0 functions. This currently makes matching significantly slower, "
+    "and re: functions are not supported",
     action="store_true",
     default=False,
 )
