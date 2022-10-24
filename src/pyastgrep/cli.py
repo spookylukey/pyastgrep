@@ -33,12 +33,6 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "-a",
-    "--abspaths",
-    help="show absolute paths",
-    action="store_true",
-)
-parser.add_argument(
     "-R",
     "--no-recurse",
     help="ignore subdirectories, searching only files in the specified directory",
@@ -102,7 +96,6 @@ def main(sys_args: list[str] | None = None) -> None:
         print_xml=args.xml,
         print_matches=not args.quiet,
         verbose=args.verbose,
-        abspaths=args.abspaths,
         before_context=before_context,
         after_context=after_context,
         xpath2=args.xpath2,

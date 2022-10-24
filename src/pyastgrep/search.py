@@ -90,12 +90,11 @@ def search(
     print_matches: bool = False,
     print_xml: bool = False,
     verbose: bool = False,
-    abspaths: bool = False,
     before_context: int = 0,
     after_context: int = 0,
     extension: str = PYTHON_EXTENSION,
     xpath2: bool = False,
-) -> list[tuple[Path, tuple[int, int]]]:
+) -> list[Match]:
     """
     Perform a recursive search through Python files.
 
@@ -105,11 +104,11 @@ def search(
     query_func = get_query_func(xpath2=xpath2)
 
     global_matches: list[Match] = []
-    for filename in get_files_to_search(paths):
-        print(filename)
+    for path in get_files_to_search(paths):
+        print(path)
         node_mappings: dict[_Element, ast.AST] = {}
         try:
-            with open(filename) as f:
+            with open(path) as f:
                 contents = f.read()
             file_lines = contents.splitlines()
             xml_ast = file_contents_to_xml_ast(
@@ -118,7 +117,7 @@ def search(
             )
         except Exception:
             if verbose:
-                print(f"WARNING: Unable to parse or read {os.path.abspath(filename) if abspaths else filename}")
+                print(f"WARNING: Unable to parse or read {os.path.abspath(path)}")
             continue  # unparseable
 
         matching_elements = query_func(xml_ast, expression)
@@ -128,7 +127,7 @@ def search(
                 print(xml.tostring(element, pretty_print=True).decode("utf-8"))
 
         matching_positions: list[Position] = positions_from_xml(matching_elements, node_mappings=node_mappings)
-        global_matches.extend(zip(repeat(filename), matching_positions))
+        global_matches.extend(zip(repeat(path), matching_positions))
 
         if print_matches:
             for (matched_lineno, col_offset) in matching_positions:
@@ -141,14 +140,7 @@ def search(
                     )
                 )
                 for lineno, line in matching_lines:
-                    print(
-                        "{path}:{lineno}:{colno}:{line}".format(
-                            path=os.path.abspath(filename) if abspaths else filename,
-                            lineno=lineno + 1,
-                            colno=col_offset + 1,
-                            line=line,
-                        )
-                    )
+                    print(f"{path}:{lineno + 1}:{col_offset + 1}:{line}")
                 if before_context or after_context:
                     print()
 

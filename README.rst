@@ -135,6 +135,14 @@ than they catch:*
    >>> len(search('.', '//Print', print_matches=False))  # number of print statements in the codebase
    751
 
+Tips
+----
+
+To get pyastgrep to print absolute paths in results, pass the current absolute
+path as the directory to search::
+
+  pyastgrep "..." $(pwd)
+
 Installation
 ------------
 

@@ -58,7 +58,7 @@ def test_search(capsys):
     # Negative test to ensure we aren't accidentally grepping this test code,
     # which could happen if CWD is wrong.
     assert_stdout(capsys, [".//*"], does_not_contain="Not real code")
-    assert_stdout(capsys, [".//Name"], contains="./misc.py:3:12:    return an_arg")
+    assert_stdout(capsys, [".//Name"], contains="misc.py:3:12:    return an_arg")
 
 
 def test_search_file(capsys):
