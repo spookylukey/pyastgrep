@@ -1,17 +1,20 @@
+from __future__ import annotations
+
 import re
+from typing import Any
 
 import elementpath  # XPath 2.0 functions
 from lxml import etree
-from lxml.etree import tostring
+from lxml.etree import _Element, _ElementUnicodeResult, tostring
 
 __all__ = ["tostring", "lxml_query"]
 
 
-def lxml_query(element, expression):
+def lxml_query(element: _Element, expression: str) -> list[_Element | Any | _ElementUnicodeResult]:
     return element.xpath(expression)
 
 
-def elementpath_query(element, expression):
+def elementpath_query(element: _Element, expression: str) -> list[_Element | Any]:
     return elementpath.select(element, expression)
 
 

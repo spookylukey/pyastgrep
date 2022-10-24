@@ -1,8 +1,14 @@
 """Functions for searching the XML from file, file contents, or directory."""
+from __future__ import annotations
+
 import ast
 import glob
 import os
 from itertools import islice, repeat
+from pathlib import Path
+from typing import Any, Callable, Generator, Tuple
+
+from lxml.etree import _Element
 
 from . import xml
 from .asts import convert_to_xml
@@ -10,9 +16,15 @@ from .asts import convert_to_xml
 PYTHON_EXTENSION = f"{os.path.extsep}py"
 
 
-def positions_from_xml(elements, node_mappings=None):
+Position = Tuple[int, int]
+
+
+def positions_from_xml(
+    elements: list[_Element | Any], node_mappings: dict[_Element, ast.AST] | None = None
+) -> list[Position]:
     """Given a list of elements, return a list of (line, col) numbers."""
     positions = []
+
     for element in elements:
         try:
             linenos = xml.lxml_query(element, "./ancestor-or-self::*[@lineno][1]/@lineno")
@@ -25,9 +37,14 @@ def positions_from_xml(elements, node_mappings=None):
     return positions
 
 
-def file_contents_to_xml_ast(contents, omit_docstrings=False, node_mappings=None, filename="<unknown>"):
+def file_contents_to_xml_ast(
+    contents: str,
+    omit_docstrings: bool = False,
+    node_mappings: dict[_Element, ast.AST] | None = None,
+    filename: str = "<unknown>",
+) -> _Element:
     """Convert Python file contents (as a string) to an XML AST, for use with find_in_ast."""
-    parsed_ast = ast.parse(contents, filename)
+    parsed_ast: ast.AST = ast.parse(contents, filename)
     return convert_to_xml(
         parsed_ast,
         omit_docstrings=omit_docstrings,
@@ -47,34 +64,38 @@ def file_to_xml_ast(filename, omit_docstrings=False, node_mappings=None):
     )
 
 
-def get_query_func(*, xpath2: bool):
+def get_query_func(*, xpath2: bool) -> Callable:
     if xpath2:
         return xml.elementpath_query
     else:
         return xml.lxml_query
 
 
-def get_files_to_search(paths):
+def get_files_to_search(paths: list[str]) -> Generator[Path, None, None]:
     for path in paths:
         # TODO handle missing files by yielding some kind of error object
         if os.path.isfile(path):
-            yield path
+            yield Path(path)
         else:
-            yield from glob.glob(path + "/**/*.py", recursive=True)
+            for filename in glob.glob(path + "/**/*.py", recursive=True):
+                yield Path(filename)
+
+
+Match = Tuple[Path, Position]
 
 
 def search(
-    paths,
-    expression,
-    print_matches=False,
-    print_xml=False,
-    verbose=False,
-    abspaths=False,
-    before_context=0,
-    after_context=0,
-    extension=PYTHON_EXTENSION,
-    xpath2=False,
-):
+    paths: list[str],
+    expression: str,
+    print_matches: bool = False,
+    print_xml: bool = False,
+    verbose: bool = False,
+    abspaths: bool = False,
+    before_context: int = 0,
+    after_context: int = 0,
+    extension: str = PYTHON_EXTENSION,
+    xpath2: bool = False,
+) -> list[tuple[Path, tuple[int, int]]]:
     """
     Perform a recursive search through Python files.
 
@@ -83,10 +104,10 @@ def search(
     """
     query_func = get_query_func(xpath2=xpath2)
 
-    global_matches = []
+    global_matches: list[Match] = []
     for filename in get_files_to_search(paths):
         print(filename)
-        node_mappings = {}
+        node_mappings: dict[_Element, ast.AST] = {}
         try:
             with open(filename) as f:
                 contents = f.read()
@@ -106,7 +127,7 @@ def search(
             for element in matching_elements:
                 print(xml.tostring(element, pretty_print=True).decode("utf-8"))
 
-        matching_positions = positions_from_xml(matching_elements, node_mappings=node_mappings)
+        matching_positions: list[Position] = positions_from_xml(matching_elements, node_mappings=node_mappings)
         global_matches.extend(zip(repeat(filename), matching_positions))
 
         if print_matches:
@@ -134,7 +155,7 @@ def search(
     return global_matches
 
 
-def context(lines, index, before=0, after=0, both=0):
+def context(lines: list[str], index: int, before: int = 0, after: int = 0, both: int = 0) -> islice:
     """
     Yield of 2-tuples from lines around the index. Like grep -A, -B, -C.
 

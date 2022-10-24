@@ -82,7 +82,7 @@ parser.add_argument(
 )
 
 
-def main(sys_args: list[str] | None = None):
+def main(sys_args: list[str] | None = None) -> None:
     """Entrypoint for CLI."""
     args = parser.parse_args(args=sys_args)
 

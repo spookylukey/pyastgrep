@@ -1,23 +1,24 @@
 """Convert AST to XML objects."""
+from __future__ import annotations
 
 import ast
 import codecs
 from functools import partial
-from numbers import Number
 
-try:
-    from lxml import etree
-except ImportError:
-    import xml.etree.ElementTree as etree
+from lxml import etree
+from lxml.etree import _Element
 
 
-def _set_encoded_literal(set_fn, literal):
-    if isinstance(literal, Number):
+def _set_encoded_literal(set_fn: partial, literal: bool | int | str | None) -> None:
+    if isinstance(literal, (bool, int, float)):
         literal = str(literal)
-    try:
-        set_fn(codecs.encode(literal, "ascii", "xmlcharrefreplace"))
-    except Exception:
-        set_fn("")  # Null byte - failover to empty string
+    if literal is None:
+        set_fn("")
+    else:
+        try:
+            set_fn(codecs.encode(literal, "ascii", "xmlcharrefreplace"))
+        except Exception:
+            set_fn("")  # Null byte - failover to empty string
 
 
 def _strip_docstring(body):
@@ -27,7 +28,9 @@ def _strip_docstring(body):
     return body
 
 
-def convert_to_xml(node, omit_docstrings=False, node_mappings=None):
+def convert_to_xml(
+    node: ast.AST, omit_docstrings: bool = False, node_mappings: dict[_Element, ast.AST] | None = None
+) -> _Element:
     """Convert supplied AST node to XML."""
     possible_docstring = isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.Module))
 
