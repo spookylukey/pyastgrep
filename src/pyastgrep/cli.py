@@ -12,7 +12,7 @@ from __future__ import annotations
 import argparse
 
 from pyastgrep.printer import print_results
-from pyastgrep.search import search
+from pyastgrep.search import search_python_files
 
 parser = argparse.ArgumentParser(description="Grep Python files uses XPath expressions against the AST")
 parser.add_argument(
@@ -28,9 +28,8 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
-    "-x",
     "--xml",
-    help="print only the matching XML elements",
+    help="print the matching XML elements",
     action="store_true",
 )
 parser.add_argument(
@@ -93,7 +92,7 @@ def main(sys_args: list[str] | None = None) -> None:
     else:
         paths = args.path
     print_results(
-        search(
+        search_python_files(
             paths,
             args.expr,
             xpath2=args.xpath2,

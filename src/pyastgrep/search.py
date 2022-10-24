@@ -4,11 +4,11 @@ from __future__ import annotations
 import ast
 import glob
 import os
+from dataclasses import dataclass
 from itertools import islice
 from pathlib import Path
-from typing import Any, Callable, Generator
+from typing import Callable, Generator
 
-from attr import dataclass
 from lxml.etree import _Element
 
 from . import xml
@@ -21,22 +21,15 @@ class Position:
     col_offset: int  # 0-indexed, as per AST
 
 
-def positions_from_xml(
-    elements: list[_Element | Any], node_mappings: dict[_Element, ast.AST] | None = None
-) -> list[Position]:
-    """Given a list of elements, return a list of (line, col) numbers."""
-    positions = []
-
-    for element in elements:
-        try:
-            linenos = xml.lxml_query(element, "./ancestor-or-self::*[@lineno][1]/@lineno")
-            col_offsets = xml.lxml_query(element, "./ancestor-or-self::*[@col_offset][1]/@col_offset")
-        except AttributeError:
-            raise AttributeError("Element has no ancestor with line number/col offset")
-
-        if linenos and col_offsets:
-            positions.append(Position(int(linenos[0]), int(col_offsets[0])))
-    return positions
+def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] | None = None) -> Position | None:
+    try:
+        linenos = xml.lxml_query(element, "./ancestor-or-self::*[@lineno][1]/@lineno")
+        col_offsets = xml.lxml_query(element, "./ancestor-or-self::*[@col_offset][1]/@col_offset")
+    except AttributeError:
+        raise AttributeError("Element has no ancestor with line number/col offset")
+    if linenos and col_offsets:
+        return Position(int(linenos[0]), int(col_offsets[0]))
+    return None
 
 
 def file_contents_to_xml_ast(
@@ -75,21 +68,18 @@ def get_files_to_search(paths: list[str]) -> Generator[Path, None, None]:
 class Match:
     path: Path
     file_lines: list[str]
+    xml_element: _Element
     position: Position
 
 
-def search(
+def search_python_files(
     paths: list[str],
     expression: str,
-    before_context: int = 0,
-    after_context: int = 0,
     xpath2: bool = False,
 ) -> Generator[Match, None, None]:
     """
     Perform a recursive search through Python files.
 
-    Only for files in the given directory for items matching the specified
-    expression.
     """
     query_func = get_query_func(xpath2=xpath2)
 
@@ -108,10 +98,11 @@ def search(
             continue  # unparseable
 
         matching_elements = query_func(xml_ast, expression)
-        matching_positions: list[Position] = positions_from_xml(matching_elements, node_mappings=node_mappings)
 
-        for position in matching_positions:
-            yield Match(path, file_lines, position)
+        for element in matching_elements:
+            position = position_from_xml(element, node_mappings=node_mappings)
+            if position is not None:
+                yield Match(path, file_lines, element, position)
 
 
 def context(lines: list[str], index: int, before: int = 0, after: int = 0, both: int = 0) -> islice:
