@@ -3,7 +3,7 @@ pyastgrep
 
 |PyPI version|
 
-A command-line utility for querying Python ASTs using XPath syntax.
+A command-line utility for grepping Python files using XPath syntax against the Python AST.
 
 
 TODO
