@@ -33,7 +33,14 @@ class Output:
     stderr: str
 
 
-def run_print(cwd: str, expr: str, paths: list[str] | None = None, print_xml: bool = False) -> Output:
+def run_print(
+    cwd: str,
+    expr: str,
+    paths: list[str] | None = None,
+    print_xml: bool = False,
+    before_context: int = 0,
+    after_context: int = 0,
+) -> Output:
     # As much as possible, we're avoiding capsys or other techniques that
     # capture stdin/out, because they interacts badly with trying to do REPL
     # programming and debugging
@@ -46,5 +53,7 @@ def run_print(cwd: str, expr: str, paths: list[str] | None = None, print_xml: bo
             search_python_files(paths or ["."], expr),
             stdout=stdout,
             print_xml=print_xml,
+            before_context=before_context,
+            after_context=after_context,
         )
     return Output(stdout=stdout.getvalue(), stderr=stderr.getvalue())

@@ -5,7 +5,6 @@ import ast
 import glob
 import os
 from dataclasses import dataclass
-from itertools import islice
 from pathlib import Path
 from typing import Callable, Generator
 
@@ -13,6 +12,14 @@ from lxml.etree import _Element
 
 from . import xml
 from .asts import convert_to_xml
+
+
+@dataclass
+class Match:
+    path: Path
+    file_lines: list[str]
+    xml_element: _Element
+    position: Position
 
 
 @dataclass
@@ -64,14 +71,6 @@ def get_files_to_search(paths: list[str]) -> Generator[Path, None, None]:
                 yield Path(filename)
 
 
-@dataclass
-class Match:
-    path: Path
-    file_lines: list[str]
-    xml_element: _Element
-    position: Position
-
-
 def search_python_files(
     paths: list[str],
     expression: str,
@@ -103,24 +102,3 @@ def search_python_files(
             position = position_from_xml(element, node_mappings=node_mappings)
             if position is not None:
                 yield Match(path, file_lines, element, position)
-
-
-def context(lines: list[str], index: int, before: int = 0, after: int = 0, both: int = 0) -> islice:
-    """
-    Yield of 2-tuples from lines around the index. Like grep -A, -B, -C.
-
-    before and after are ignored if a value for both is set. Example usage::
-
-        >>>list(context('abcdefghij', 5, before=1, after=2))
-        [(4, 'e'), (5, 'f'), (6, 'g'), (7, 'h')]
-
-    :arg iterable lines: Iterable to select from.
-    :arg int index: The item of interest.
-    :arg int before: Number of lines of context before index.
-    :arg int after: Number of lines of context after index.
-    :arg int both: Number of lines of context either side of index.
-    """
-    before, after = (both, both) if both else (before, after)
-    start = max(0, index - before)
-    end = index + 1 + after
-    return islice(enumerate(lines), start, end)
