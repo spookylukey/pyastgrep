@@ -167,9 +167,9 @@ Install
 Links
 -----
 
--  `Green tree snakes <https://greentreesnakes.readthedocs.io/en/latest/>`__ - a very readable overview of Python ASTs.
--  ``ast`` module documentation for `Python 3.X <https://docs.python.org/3/library/ast.html>`__.
--  `Python AST Explorer <https://python-ast-explorer.com/>`__ for worked  examples of ASTs.
+- `Green tree snakes <https://greentreesnakes.readthedocs.io/en/latest/>`__ - a very readable overview of Python ASTs.
+- `ast module documentation <https://docs.python.org/3/library/ast.html>`__.
+- `Python AST Explorer <https://python-ast-explorer.com/>`__ for worked  examples of ASTs.
 -  A `brief guide to XPath <http://www.w3schools.com/xml/xpath_syntax.asp>`__.
 
 History
