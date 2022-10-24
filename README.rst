@@ -10,21 +10,25 @@ pyastgrep
 
 A command-line utility for grepping Python files using XPath syntax against the Python AST.
 
+Status: usable, with test suite, but still cleaning things up and implementing some options. No PyPI package yet.
 
 TODO
 ----
 
+* Add options to control column numbers
 
 * Change examples to match current output
 
-* Clean up command line args to match grep/ripgrep
-
 * Ignore files/directories that are ignored by ripgrep by default
-
-* Test suite!
 
 * Docs, especially about XML output and different Python AST versions
 
+DONE
+----
+
+* Clean up command line args to match grep/ripgrep__
+
+* Test suite!
 
 Example usage
 -------------
