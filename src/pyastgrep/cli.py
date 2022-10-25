@@ -12,10 +12,16 @@ from __future__ import annotations
 import argparse
 import sys
 
+from pyastgrep import __version__
 from pyastgrep.printer import print_results
 from pyastgrep.search import search_python_files
 
-parser = argparse.ArgumentParser(description="Grep Python files uses XPath expressions against the AST")
+NAME_AND_VERSION = "pyastgrep " + __version__
+parser = argparse.ArgumentParser(
+    prog=NAME_AND_VERSION,
+    description="Grep Python files uses XPath expressions against the AST",
+)
+parser.add_argument("--version", action="version", version=NAME_AND_VERSION)
 parser.add_argument(
     "-q",
     "--quiet",
