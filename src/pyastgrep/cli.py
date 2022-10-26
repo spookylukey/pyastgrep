@@ -23,7 +23,7 @@ parser = argparse.ArgumentParser(
     prog=NAME_AND_VERSION,
     description="Grep Python files uses XPath expressions against the AST",
 )
-parser.add_argument("--version", action="version", version=NAME_AND_VERSION)
+parser.add_argument("--version", action="version", version=NAME_AND_VERSION + f", Python {sys.version}")
 parser.add_argument(
     "-q",
     "--quiet",
