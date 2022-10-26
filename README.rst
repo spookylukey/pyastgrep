@@ -135,19 +135,30 @@ Names longer than 42 characters:
 
    $ pyastgrep "//ExceptHandler[body//Raise/exc//Name and not(contains(body//Raise/exc//Name/@id, type/Name/@id))]"
 
+Functions whose name contain a substring:
+
+.. code:: bash
+
+   $ pyastgrep './/FunctionDef[contains(@name, "something")]'
+
 Classes whose name matches a regular expression:
 
 .. code:: bash
 
    $ pyastgrep ".//ClassDef[re:match('M.*', @name)]"
-   src/pyastgrep/search.py:18:1:class Match:
 
 
 Docstrings of functions/methods whose value contains “hello”:
 
 .. code:: bash
 
-   pyastgrep './/FunctionDef/body/Expr[1]/value/Constant[@type="str"][contains(@value, "hello")]'
+   $ pyastgrep './/FunctionDef/body/Expr[1]/value/Constant[@type="str"][contains(@value, "hello")]'
+
+For-loop variables called ``i`` or ``j``:
+
+.. code:: bash
+
+   $ pyastgrep './/For/target//Name[@id="i" or @id="j"]'
 
 Tips
 ----
