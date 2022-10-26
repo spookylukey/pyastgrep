@@ -31,8 +31,13 @@ parser.add_argument(
     action="store_true",
 )
 parser.add_argument(
+    "--ast",
+    help="pretty-print the matching AST objects",
+    action="store_true",
+)
+parser.add_argument(
     "--xml",
-    help="print the matching XML elements",
+    help="pretty-print the matching XML elements",
     action="store_true",
 )
 parser.add_argument(
@@ -104,6 +109,7 @@ def main(sys_args: list[str] | None = None, stdin: IOBase = None) -> int:
             xpath2=args.xpath2,
         ),
         print_xml=args.xml,
+        print_ast=args.ast,
         quiet=args.quiet,
         before_context=before_context,
         after_context=after_context,

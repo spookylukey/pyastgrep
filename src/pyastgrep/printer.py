@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from typing import Iterable
 
+import astpretty
+
 from . import xml
 from .search import Match, Pathlike
 
@@ -10,6 +12,7 @@ from .search import Match, Pathlike
 def print_results(
     results: Iterable[Match],
     print_xml: bool = False,
+    print_ast: bool = False,
     before_context: int = 0,
     after_context: int = 0,
     stdout=None,
@@ -72,6 +75,9 @@ def print_results(
         # The actual result
         print(f"{result.path}:{line_index + 1}:{position.col_offset + 1}:{line}", file=stdout)
         printed_context_lines.add((result.path, line_index))
+
+        if print_ast:
+            print(astpretty.pformat(result.ast_node), file=stdout)
 
         if print_xml:
             print(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"), file=stdout)

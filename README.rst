@@ -51,21 +51,30 @@ and how that is mapped to XML. Some methods for doing that are below:
 1. Use `Python AST Explorer <https://python-ast-explorer.com/>`_ to play around
    with what AST looks like.
 
-2. Dump out the XML structure of the top-level statements in a Python file. The
-   top-level elements are ``<Module><body>``, and don’t correspond to actual
-   source lines. To get the statements within it, you can use an XPath
+2. Dump out the AST and/or XML structure of the top-level statements in a Python file. The
+   top-level XML elements are ``<Module><body>``, and don’t correspond to actual
+   source lines. To get the statements within the body, you can use an XPath
    expression ``/Module/body/*`` or ``./*/*``:
 
   .. code:: bash
 
-     $ pyastgrep --xml './*/*' myfile.py
+     $ pyastgrep --xml --ast './*/*' myfile.py
      myfile.py:1:1:import os
+     Import(
+         lineno=1,
+         col_offset=0,
+         end_lineno=1,
+         end_col_offset=9,
+         names=[alias(lineno=1, col_offset=7, end_lineno=1, end_col_offset=9, name='os', asname=None)],
+     )
+     ...
      <Import lineno="1" col_offset="0">
        <names>
          <alias lineno="1" col_offset="7" type="str" name="os"/>
        </names>
      </Import>
      ...
+
 
 Note that the XML format is a very direct translation of the Python AST as
 produced by the `ast module <https://docs.python.org/3/library/ast.html>`_ (with

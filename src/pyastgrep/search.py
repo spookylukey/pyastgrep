@@ -30,6 +30,7 @@ class Match:
     file_lines: list[str]
     xml_element: _Element
     position: Position
+    ast_node: ast.AST
 
 
 @dataclass
@@ -51,16 +52,17 @@ def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] 
 
 def file_contents_to_xml_ast(
     contents: str,
+    node_mappings: dict[_Element, ast.AST],
+    *,
     omit_docstrings: bool = False,
-    node_mappings: dict[_Element, ast.AST] | None = None,
     filename: str = "<unknown>",
 ) -> _Element:
     """Convert Python file contents (as a string) to an XML AST, for use with find_in_ast."""
     parsed_ast: ast.AST = ast.parse(contents, filename)
     return convert_to_xml(
         parsed_ast,
+        node_mappings,
         omit_docstrings=omit_docstrings,
-        node_mappings=node_mappings,
     )
 
 
@@ -108,7 +110,8 @@ def search_python_files(
             file_lines = contents.splitlines()
             xml_ast = file_contents_to_xml_ast(
                 contents,
-                node_mappings=node_mappings,
+                node_mappings,
+                filename=str(source),
             )
         except Exception:
             # TODO yield warning
@@ -117,6 +120,7 @@ def search_python_files(
         matching_elements = query_func(xml_ast, expression)
 
         for element in matching_elements:
+            ast_node = node_mappings.get(element, None)
             position = position_from_xml(element, node_mappings=node_mappings)
-            if position is not None:
-                yield Match(source, file_lines, element, position)
+            if position is not None and ast_node is not None:
+                yield Match(source, file_lines, element, position, ast_node)

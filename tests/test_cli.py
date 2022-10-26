@@ -3,6 +3,8 @@ from __future__ import annotations
 import io
 import os
 import os.path
+import re
+import sys
 
 import pytest
 
@@ -101,4 +103,33 @@ def test_pipe_stdin(capsys):
         [".//Import", "-"],
         stdin="import os",
         equals="<stdin>:1:1:import os\n",
+    )
+
+
+def test_print_ast(capsys):
+    expected = """<stdin>:1:1:a + b
+Expr(
+    lineno=1,
+    col_offset=0,
+    end_lineno=1,
+    end_col_offset=5,
+    value=BinOp(
+        lineno=1,
+        col_offset=0,
+        end_lineno=1,
+        end_col_offset=5,
+        left=Name(lineno=1, col_offset=0, end_lineno=1, end_col_offset=1, id='a', ctx=Load()),
+        op=Add(),
+        right=Name(lineno=1, col_offset=4, end_lineno=1, end_col_offset=5, id='b', ctx=Load()),
+    ),
+)
+"""
+    if sys.version_info < (3, 8):
+        # Python 3.7 doesn't return end info
+        expected, _ = re.subn(r" *end_(lineno|col_offset)=\d+,\n?", "", expected)
+    assert_stdout(
+        capsys,
+        ["--ast", "./*/*", "-"],
+        stdin="a + b",
+        equals=expected,
     )
