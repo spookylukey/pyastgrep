@@ -142,6 +142,13 @@ Classes whose name matches a regular expression:
    $ pyastgrep ".//ClassDef[re:match('M.*', @name)]"
    src/pyastgrep/search.py:18:1:class Match:
 
+
+Docstrings of functions/methods whose value contains “hello”:
+
+.. code:: bash
+
+   pyastgrep './/FunctionDef/body/Expr[1]/value/Constant[@type="str"][contains(@value, "hello")]'
+
 Tips
 ----
 
