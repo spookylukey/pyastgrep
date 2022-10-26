@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import sys
-from pathlib import Path
 from typing import Iterable
 
 from . import xml
-from .search import Match
+from .search import Match, Pathlike
 
 
 def print_results(
@@ -21,14 +20,14 @@ def print_results(
     matches = 0
     errors = 0  # TODO
 
-    printed_context_lines: set[tuple[Path, int]] = set()
+    printed_context_lines: set[tuple[Pathlike, int]] = set()
     # This is more complex than just iterating through results due to before and after context,
     # which can result in overlapping matches. We have to know if there is another result
     # from the same file before we can print "after" context lines for the current result.
 
-    queued_context_lines: list[tuple[Path, int, str]] = []
+    queued_context_lines: list[tuple[Pathlike, int, str]] = []
 
-    def queue_context_lines(result, context_line_indices):
+    def queue_context_lines(result: Match, context_line_indices: list[int]):
         for context_line_index in context_line_indices:
             if (result.path, context_line_index) not in printed_context_lines:
                 context_line = result.file_lines[context_line_index]
@@ -48,7 +47,7 @@ def print_results(
                 compare_result is None
                 or path != compare_result.path  # from a different file => print
                 or line_index
-                < result.position.lineno - before_context - 1  # Before the context for current result => print
+                < compare_result.position.lineno - before_context - 1  # Before the context for current result => print
             ):
                 print(to_print, file=stdout)
                 printed_context_lines.add((path, line_index))

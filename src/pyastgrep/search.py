@@ -5,18 +5,28 @@ import ast
 import glob
 import os
 from dataclasses import dataclass
+from io import IOBase
 from pathlib import Path
-from typing import Callable, Generator
+from typing import TYPE_CHECKING, Callable, Generator, Sequence
 
 from lxml.etree import _Element
 
 from . import xml
 from .asts import convert_to_xml
 
+if TYPE_CHECKING:
+    from typing import Literal
+
+    Pathlike = Path | Literal["<stdin>"]
+else:
+    # `|` not supported on older Python versions we support,
+    # and Literal is only available in Python 3.8+
+    Pathlike = Path
+
 
 @dataclass
 class Match:
-    path: Path
+    path: Pathlike
     file_lines: list[str]
     xml_element: _Element
     position: Position
@@ -61,10 +71,12 @@ def get_query_func(*, xpath2: bool) -> Callable:
         return xml.lxml_query
 
 
-def get_files_to_search(paths: list[str]) -> Generator[Path, None, None]:
+def get_files_to_search(paths: Sequence[str | IOBase]) -> Generator[Path | IOBase, None, None]:
     for path in paths:
         # TODO handle missing files by yielding some kind of error object
-        if os.path.isfile(path):
+        if isinstance(path, IOBase):
+            yield path
+        elif os.path.isfile(path):
             yield Path(path)
         else:
             for filename in glob.glob(path + "/**/*.py", recursive=True):
@@ -72,7 +84,7 @@ def get_files_to_search(paths: list[str]) -> Generator[Path, None, None]:
 
 
 def search_python_files(
-    paths: list[str],
+    paths: Sequence[str | IOBase],
     expression: str,
     xpath2: bool = False,
 ) -> Generator[Match, None, None]:
@@ -85,8 +97,14 @@ def search_python_files(
     for path in get_files_to_search(paths):
         node_mappings: dict[_Element, ast.AST] = {}
         try:
-            with open(path) as f:
-                contents = f.read()
+            source: Pathlike
+            if isinstance(path, IOBase):
+                source = "<stdin>"
+                contents = path.read()
+            else:
+                source = path
+                with open(path) as f:
+                    contents = f.read()
             file_lines = contents.splitlines()
             xml_ast = file_contents_to_xml_ast(
                 contents,
@@ -101,4 +119,4 @@ def search_python_files(
         for element in matching_elements:
             position = position_from_xml(element, node_mappings=node_mappings)
             if position is not None:
-                yield Match(path, file_lines, element, position)
+                yield Match(source, file_lines, element, position)

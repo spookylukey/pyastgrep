@@ -51,7 +51,10 @@ and how that is mapped to XML. Some methods for doing that are below:
 1. Use `Python AST Explorer <https://python-ast-explorer.com/>`_ to play around
    with what AST looks like.
 
-2. Dump out the XML structure of top-level statements in a Python file:
+2. Dump out the XML structure of the top-level statements in a Python file. The
+   top-level elements are ``<Module><body>``, and don’t correspond to actual
+   source lines. To get the statements within it, you can use an XPath
+   expression ``/Module/body/*`` or ``./*/*``:
 
   .. code:: bash
 
@@ -72,6 +75,27 @@ in the AST correspond to new syntax that is added to Python, but in some cases a
 new Python version will make significant changes made to the AST generated for
 the same code.
 
+You can also pipe specific Python fragments using ``-`` to specify stdin as the
+input file:
+
+.. code:: bash
+
+   $ echo 'a + b' | pyastgrep --xml './*/*' -
+   <stdin>:1:1:a + b
+   <Expr lineno="1" col_offset="0">
+     <value>
+       <BinOp lineno="1" col_offset="0">
+         <left>
+           <Name lineno="1" col_offset="0" type="str" id="a">
+             <ctx>
+               <Load/>
+             </ctx>
+           </Name>
+         </left>
+         <op>
+           <Add/>
+         </op>
+     ...
 
 You’ll also need some understanding of how to write XPath expressions, but the
 examples below should get you started.

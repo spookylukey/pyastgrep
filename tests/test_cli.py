@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import io
 import os
 import os.path
 
@@ -14,13 +15,14 @@ DIR = os.path.dirname(__file__) + "/examples/test_cli"
 def assert_stdout(
     capsys,
     args: list[str],
+    stdin: str | None = None,
     contains: str | list[str] | None = None,
     does_not_contain: str | list[str] | None = None,
     equals: str | None = None,
 ):
     try:
         with chdir(DIR):
-            main(args)
+            main(args, stdin=io.StringIO(stdin) if stdin is not None else None)
     except SystemExit:
         pass
     output = capsys.readouterr().out
@@ -91,3 +93,12 @@ def test_quiet(capsys):
     with chdir(DIR):
         assert main(["--quiet", ".//Name", "misc.py"]) == 0
         assert main(["--quiet", ".//NameXXXX", "misc.py"]) == 1
+
+
+def test_pipe_stdin(capsys):
+    assert_stdout(
+        capsys,
+        [".//Import", "-"],
+        stdin="import os",
+        equals="<stdin>:1:1:import os\n",
+    )

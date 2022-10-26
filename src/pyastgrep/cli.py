@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import argparse
 import sys
+from io import IOBase
+from typing import cast
 
 from pyastgrep import __version__
 from pyastgrep.printer import print_results
@@ -67,7 +69,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "path",
-    help="Files or directory to search, defaults to current directory",
+    help="Zero or more files or directory to search. Search defaults to current directory if omitted. Use - for stdin",
     nargs="*",
 )
 
@@ -76,7 +78,7 @@ NO_MATCH_FOUND = 1
 ERROR = 2
 
 
-def main(sys_args: list[str] | None = None) -> int:
+def main(sys_args: list[str] | None = None, stdin: IOBase = None) -> int:
     """Entrypoint for CLI."""
     args = parser.parse_args(args=sys_args)
 
@@ -86,11 +88,15 @@ def main(sys_args: list[str] | None = None) -> int:
         print("ERROR: Context cannot be specified when suppressing output.", file=sys.stderr)
         return ERROR
 
+    paths: list[str | IOBase]
     if len(args.path) == 0:
         paths = ["."]
     else:
         paths = args.path
 
+    if stdin is None:
+        stdin = cast(IOBase, sys.stdin)  # mypy thinks stdin is `typing.IO`
+    paths = [stdin if p == "-" else p for p in paths]
     matches, errors = print_results(
         search_python_files(
             paths,
