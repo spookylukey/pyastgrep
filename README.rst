@@ -8,46 +8,85 @@ pyastgrep
 .. image:: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml/badge.svg
      :target: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml
 
-A command-line utility for grepping Python files using XPath syntax against the Python AST.
+A command-line utility for grepping Python files using XPath syntax against the
+Python AST (Abstract Syntax Tree).
 
-The interface and behaviour is designed to match grep and ripgrep as far as it makes sense to do so.
+In other words, this allows you to search Python code against specific syntax
+elements (function definitions, arguments, assignments, variables etc), instead
+of grepping for string matches.
+
+The interface and behaviour is designed to match grep and ripgrep as far as it
+makes sense to do so.
 
 Status: usable, with test suite, but still cleaning things up and `implementing
 some options <https://github.com/spookylukey/pyastgrep/issues>`_
 
 No PyPI package yet.
 
+Installation
+------------
 
-Example usage
--------------
+Python 3.7+ required.
 
-To get started, dump out the XML structure of top-level statements in a Python file:
+We recommend `pipx <https://pipxproject.github.io/pipx/>`_ to install it
+conveniently in an isolated environment:
 
-.. code:: bash
+::
 
-   $ pyastgrep --xml './*/*' path/to/file.py --xml
-   src/pyastgrep/search.py:5:1:import os
-   <Import lineno="1" col_offset="0">
-     <names>
-       <alias lineno="1" col_offset="7" type="str" name="os"/>
-     </names>
-   </Import>
-   ...
+   pipx install pyastgrep
 
-This should help in writing XPath expressions.
+
+You can also use pip:
+
+::
+
+   pip install pyastgrep
+
+Understanding the XML structure
+-------------------------------
+
+To get started, you’ll need some understanding of how Python AST is structured,
+and how that is mapped to XML. Some methods for doing that are below:
+
+1. Use `Python AST Explorer <https://python-ast-explorer.com/>`_ to play around
+   with what AST looks like.
+
+2. Dump out the XML structure of top-level statements in a Python file:
+
+  .. code:: bash
+
+     $ pyastgrep --xml './*/*' myfile.py
+     myfile.py:1:1:import os
+     <Import lineno="1" col_offset="0">
+       <names>
+         <alias lineno="1" col_offset="7" type="str" name="os"/>
+       </names>
+     </Import>
+     ...
 
 Note that the XML format is a very direct translation of the Python AST as
-produced by the ast module. This AST is not stable across Python versions,
-so the XML is not stable either.
+produced by the `ast module <https://docs.python.org/3/library/ast.html>`_ (with
+some small additions made to improve usability for a few cases). This AST is not
+stable across Python versions, so the XML is not stable either. Normally changes
+in the AST correspond to new syntax that is added to Python, but in some cases a
+new Python version will make significant changes made to the AST generated for
+the same code.
 
-Finding all usages of a function called ``open``:
+
+You’ll also need some understanding of how to write XPath expressions, but the
+examples below should get you started.
+
+Examples
+--------
+
+Find all usages of a function called ``open``:
 
 .. code:: bash
 
    $ pyastgrep ".//Call/func/Name[@id='open']"
    src/pyastgrep/search.py:88:18:            with open(path) as f:
 
-Finding all numbers (Python 3.8+)
+Find all literal numbers (Python 3.8+):
 
 .. code:: bash
 
@@ -55,24 +94,19 @@ Finding all numbers (Python 3.8+)
    tests/examples/test_xml/everything.py:5:20:    assigned_int = 123
    tests/examples/test_xml/everything.py:6:22:    assigned_float = 3.14
 
-Integers that are not assigned to a variable:
+Names longer than 42 characters:
 
 .. code:: bash
 
-Names longer than 22 characters:
+   $ pyastgrep './/Name[string-length(@id) > 42]'
 
-.. code:: bash
-
-   $ pyastgrep './/Name[string-length(@id) > 22]'
-   src/pyastgrep/search.py:91:23:            xml_ast = file_contents_to_xml_ast(
-
-Find ``except`` clauses that raise a different exception class than they catch:
+``except`` clauses that raise a different exception class than they catch:
 
 .. code:: bash
 
    $ pyastgrep "//ExceptHandler[body//Raise/exc//Name and not(contains(body//Raise/exc//Name/@id, type/Name/@id))]"
 
-Classes matching a regular expression:
+Classes whose name matches a regular expression:
 
 .. code:: bash
 
@@ -87,24 +121,25 @@ path as the directory to search::
 
   pyastgrep "..." $(pwd)
 
-Installation
-------------
+Limitations
+-----------
 
-Python 3.7+ required.
+pyastgrep is useful for grepping Python code at a fairly low level. It can be
+used for various refactoring or linting tasks. Some linting tasks require higher
+level understanding of a code base. For example, to detect use of a certain
+function, you need to cope with various ways that the function may be imported
+and used, and avoid detecting a function with the same name but from a different
+module. For these kinds of tasks, you might be interested in:
 
-Using pip:
+* `Semgrep <https://semgrep.dev/>`_
 
-::
 
-   pip install pyastgrep
+Use as a library
+----------------
 
-If you only want the command line tool and not the library, we recommend `pipx
-<https://pipxproject.github.io/pipx/>`_ to install it more conveniently in an
-isolated environment:
-
-::
-
-   pipx install pyastgrep
+pyastgrep is structured internally to make it easy to use a library as well as
+a CLI. However, while we will try to break things without good reason, at this
+point we are not documenting or guaranteeing API stability on these functions.
 
 
 Contributing
