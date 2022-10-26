@@ -18,10 +18,6 @@ of grepping for string matches.
 The interface and behaviour is designed to match grep and ripgrep as far as it
 makes sense to do so.
 
-Status: usable, with test suite, but still cleaning things up and `implementing
-some options <https://github.com/spookylukey/pyastgrep/issues>`_
-
-No PyPI package yet.
 
 Installation
 ------------
