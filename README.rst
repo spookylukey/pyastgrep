@@ -221,6 +221,7 @@ History
 
 This project was forked from https://github.com/hchasestevens/astpath by `H.
 Chase Stevens <http://www.chasestevens.com>`__. Main changes:
+* Added a test suite
 * Many bugs fixed
 * Significant rewrite of parts of code
 * Changes to match grep/ripgrep
