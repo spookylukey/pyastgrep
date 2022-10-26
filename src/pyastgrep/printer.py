@@ -6,20 +6,23 @@ from typing import Iterable
 import astpretty
 
 from . import xml
-from .search import Match, Pathlike
+from .search import Match, MissingPath, Pathlike, ReadError
 
 
 def print_results(
-    results: Iterable[Match],
+    results: Iterable[Match | MissingPath | ReadError],
     print_xml: bool = False,
     print_ast: bool = False,
     before_context: int = 0,
     after_context: int = 0,
     stdout=None,
+    stderr=None,
     quiet=False,
 ) -> tuple[int, int]:
     if stdout is None:
         stdout = sys.stdout
+    if stderr is None:
+        stderr = sys.stderr
     matches = 0
     errors = 0  # TODO
 
@@ -57,6 +60,13 @@ def print_results(
         queued_context_lines[:] = []
 
     for result in results:
+        if isinstance(result, MissingPath):
+            print(f"Error: {result.path} could not be found", file=stderr)
+            continue
+        elif isinstance(result, ReadError):
+            print(f"Error: {result.path}: {result.exception}", file=stderr)
+            continue
+
         matches += 1
         position = result.position
         line_index = position.lineno - 1

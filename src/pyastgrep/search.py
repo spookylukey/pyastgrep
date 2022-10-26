@@ -39,6 +39,17 @@ class Position:
     col_offset: int  # 0-indexed, as per AST
 
 
+@dataclass
+class MissingPath:
+    path: str
+
+
+@dataclass
+class ReadError:
+    path: str
+    exception: Exception
+
+
 def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] | None = None) -> Position | None:
     try:
         linenos = xml.lxml_query(element, "./ancestor-or-self::*[@lineno][1]/@lineno")
@@ -50,22 +61,6 @@ def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] 
     return None
 
 
-def file_contents_to_xml_ast(
-    contents: str,
-    node_mappings: dict[_Element, ast.AST],
-    *,
-    omit_docstrings: bool = False,
-    filename: str = "<unknown>",
-) -> _Element:
-    """Convert Python file contents (as a string) to an XML AST, for use with find_in_ast."""
-    parsed_ast: ast.AST = ast.parse(contents, filename)
-    return convert_to_xml(
-        parsed_ast,
-        node_mappings,
-        omit_docstrings=omit_docstrings,
-    )
-
-
 def get_query_func(*, xpath2: bool) -> Callable:
     if xpath2:
         return xml.elementpath_query
@@ -73,11 +68,13 @@ def get_query_func(*, xpath2: bool) -> Callable:
         return xml.lxml_query
 
 
-def get_files_to_search(paths: Sequence[str | IOBase]) -> Generator[Path | IOBase, None, None]:
+def get_files_to_search(paths: Sequence[str | IOBase]) -> Generator[Path | IOBase | MissingPath, None, None]:
     for path in paths:
         # TODO handle missing files by yielding some kind of error object
         if isinstance(path, IOBase):
             yield path
+        elif not os.path.lexists(path):
+            yield MissingPath(path)
         elif os.path.isfile(path):
             yield Path(path)
         else:
@@ -89,7 +86,7 @@ def search_python_files(
     paths: Sequence[str | IOBase],
     expression: str,
     xpath2: bool = False,
-) -> Generator[Match, None, None]:
+) -> Generator[Match | MissingPath | ReadError, None, None]:
     """
     Perform a recursive search through Python files.
 
@@ -98,24 +95,33 @@ def search_python_files(
 
     for path in get_files_to_search(paths):
         node_mappings: dict[_Element, ast.AST] = {}
-        try:
-            source: Pathlike
-            if isinstance(path, IOBase):
-                source = "<stdin>"
-                contents = path.read()
-            else:
-                source = path
+        source: Pathlike
+        if isinstance(path, IOBase):
+            source = "<stdin>"
+            contents = path.read()
+        elif isinstance(path, MissingPath):
+            yield path
+            continue
+        else:
+            source = path
+            try:
                 with open(path) as f:
                     contents = f.read()
-            file_lines = contents.splitlines()
-            xml_ast = file_contents_to_xml_ast(
-                contents,
-                node_mappings,
-                filename=str(source),
-            )
-        except Exception:
-            # TODO yield warning
-            continue  # unparseable
+            except OSError as ex:
+                yield ReadError(str(path), ex)
+                continue
+        file_lines = contents.splitlines()
+
+        try:
+            parsed_ast: ast.AST = ast.parse(contents, str(source))
+        except SyntaxError as ex:
+            yield ReadError(str(source), ex)
+            continue
+
+        xml_ast = convert_to_xml(
+            parsed_ast,
+            node_mappings,
+        )
 
         matching_elements = query_func(xml_ast, expression)
 

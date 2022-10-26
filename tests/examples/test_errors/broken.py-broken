@@ -1,0 +1,5 @@
+# We have to name this with non-standard extension, as there appears to be no
+# way to get mypy to shut up about it if we have a syntax error (as oppose to
+# just type error)
+
+a = 1 +

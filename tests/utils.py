@@ -52,6 +52,7 @@ def run_print(
         print_results(
             search_python_files(paths or ["."], expr),
             stdout=stdout,
+            stderr=stderr,
             print_xml=print_xml,
             before_context=before_context,
             after_context=after_context,
