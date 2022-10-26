@@ -140,3 +140,7 @@ $RECYCLE.BIN/
 
 # Pycharm
 .idea
+
+
+# Node stuff
+node_modules

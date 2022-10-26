@@ -2,6 +2,7 @@ Version 0.4 - unreleased
 ------------------------
 
 * Handle non-UTF8 encodings
+* Automatically apply .gitignore for ignoring files
 
 Version 0.3 - 2022-10-27
 ------------------------

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-import glob
 import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Generator, Sequence
+
+from .ignores import DirWalker
 
 
 @dataclass
@@ -14,6 +15,7 @@ class MissingPath:
 
 
 def get_files_to_search(paths: Sequence[str | BinaryIO]) -> Generator[Path | BinaryIO | MissingPath, None, None]:
+    walker = DirWalker(glob="*.py")
     for path in paths:
         if isinstance(path, str):
             if not os.path.exists(path):
@@ -21,8 +23,7 @@ def get_files_to_search(paths: Sequence[str | BinaryIO]) -> Generator[Path | Bin
             elif os.path.isfile(path):
                 yield Path(path)
             else:
-                for filename in glob.glob(path + "/**/*.py", recursive=True):
-                    yield Path(filename)
+                yield from walker.for_dir(Path(path)).walk()
         else:
             # BinaryIO
             yield path
