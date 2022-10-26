@@ -97,8 +97,8 @@ input file:
          </op>
      ...
 
-You’ll also need some understanding of how to write XPath expressions, but the
-examples below should get you started.
+You’ll also need some understanding of how to write XPath expressions (see links
+below), but the examples below should get you started.
 
 Examples
 --------
@@ -188,7 +188,10 @@ Links
 - `Green tree snakes <https://greentreesnakes.readthedocs.io/en/latest/>`__ - a very readable overview of Python ASTs.
 - `ast module documentation <https://docs.python.org/3/library/ast.html>`__.
 - `Python AST Explorer <https://python-ast-explorer.com/>`__ for worked  examples of ASTs.
--  A `brief guide to XPath <http://www.w3schools.com/xml/xpath_syntax.asp>`__.
+- A `brief guide to XPath <http://www.w3schools.com/xml/xpath_syntax.asp>`__.
+  See also the `XPath Axes <https://www.w3schools.com/xml/xpath_axes.asp>`_ guide
+  which can be very helpful for matching related AST nodes.
+- `Online XPath Tester <https://extendsclass.com/xpath-tester.html>`_
 
 History
 -------
