@@ -5,6 +5,7 @@ import io
 import os
 import typing
 from dataclasses import dataclass
+from pathlib import Path
 
 from pyastgrep.printer import print_results
 from pyastgrep.search import search_python_files
@@ -16,8 +17,8 @@ else:
     class chdir(contextlib.AbstractContextManager):  # type: ignore[no-redef]
         """Non thread-safe context manager to change the current working directory."""
 
-        def __init__(self, path: str):
-            self.path = path
+        def __init__(self, path: str | Path):
+            self.path: str = path if isinstance(path, str) else str(path.resolve())
             self._old_cwd: list[str] = []
 
         def __enter__(self):
