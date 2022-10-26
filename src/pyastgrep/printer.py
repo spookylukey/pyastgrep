@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import sys
-from typing import Iterable
+from io import IOBase
+from typing import Iterable, cast
 
 import astpretty
 
@@ -15,14 +16,14 @@ def print_results(
     print_ast: bool = False,
     before_context: int = 0,
     after_context: int = 0,
-    stdout=None,
-    stderr=None,
-    quiet=False,
+    stdout: IOBase = None,
+    stderr: IOBase = None,
+    quiet: bool = False,
 ) -> tuple[int, int]:
     if stdout is None:
-        stdout = sys.stdout
+        stdout = cast(IOBase, sys.stdout)
     if stderr is None:
-        stderr = sys.stderr
+        stderr = cast(IOBase, sys.stderr)
     matches = 0
     errors = 0  # TODO
 
@@ -33,7 +34,7 @@ def print_results(
 
     queued_context_lines: list[tuple[Pathlike, int, str]] = []
 
-    def queue_context_lines(result: Match, context_line_indices: list[int]):
+    def queue_context_lines(result: Match, context_line_indices: list[int]) -> None:
         for context_line_index in context_line_indices:
             if (result.path, context_line_index) not in printed_context_lines:
                 context_line = result.file_lines[context_line_index]
@@ -42,7 +43,7 @@ def print_results(
                     (result.path, context_line_index, f"{result.path}-{context_line_index + 1}-{context_line}")
                 )
 
-    def flush_context_lines(compare_result: Match | None):
+    def flush_context_lines(compare_result: Match | None) -> None:
         """
         Print queued context lines, but not if they would be covered by the passed
         in result.

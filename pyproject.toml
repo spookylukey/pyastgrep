@@ -13,4 +13,22 @@ multi_line_output = 3
 [tool.mypy]
 ignore_missing_imports = true
 check_untyped_defs = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
 show_error_codes = true
+
+
+[[tool.mypy.overrides]]
+module = "tests.examples.*"
+ignore_errors = true
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+ignore_errors = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false

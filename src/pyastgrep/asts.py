@@ -21,7 +21,7 @@ def _set_encoded_literal(set_fn: partial, literal: bool | int | str | None) -> N
             set_fn("")  # Null byte - failover to empty string
 
 
-def _strip_docstring(body):
+def _strip_docstring(body: list[ast.AST]) -> list[ast.AST]:
     first = body[0]
     if isinstance(first, ast.Expr) and isinstance(first.value, ast.Str):
         return body[1:]

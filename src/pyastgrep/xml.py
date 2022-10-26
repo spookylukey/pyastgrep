@@ -23,10 +23,10 @@ regex_ns.prefix = "re"
 
 
 @regex_ns
-def match(ctx, pattern, strings):
+def match(ctx: None, pattern: str, strings: list[str]) -> bool:
     return any(re.match(pattern, s) is not None for s in strings)
 
 
 @regex_ns
-def search(ctx, pattern, strings):
+def search(ctx: None, pattern: str, strings: list[str]) -> bool:
     return any(re.search(pattern, s) is not None for s in strings)
