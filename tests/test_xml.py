@@ -22,3 +22,18 @@ def test_literals():
 
     assert "assigned_int" not in output_string
     assert "assigned_string" in output_string
+
+
+def test_re_match():
+    output = run_print(DIR, './/Name[re:match("assigned_.*", @id)]').stdout
+    assert "assigned_int" in output
+    assert "assigned_str" in output
+
+    output2 = run_print(DIR, './/Name[re:match("sign", @id)]').stdout
+    assert "assigned_int" not in output2
+
+
+def test_re_search():
+    output = run_print(DIR, './/Name[re:search("_.nt", @id)]').stdout
+    assert "assigned_int" in output
+    assert "assigned_str" not in output
