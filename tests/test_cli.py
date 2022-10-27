@@ -14,49 +14,54 @@ from tests.utils import chdir
 DIR = os.path.dirname(__file__) + "/examples/test_cli"
 
 
-def assert_stdout(
+def assert_output(
     capsys,
     args: list[str],
     stdin: str | None = None,
     contains: str | list[str] | None = None,
     does_not_contain: str | list[str] | None = None,
     equals: str | None = None,
+    error_equals: str | None = None,
 ):
     try:
         with chdir(DIR):
             main(args, stdin=io.StringIO(stdin) if stdin is not None else None)
     except SystemExit:
         pass
-    output = capsys.readouterr().out
+    output = capsys.readouterr()
+    stdout = output.out
+    stderr = output.err
     with capsys.disabled():
         if contains is not None:
             if not isinstance(contains, list):
                 contains = [contains]
             for text in contains:
-                assert text in output
+                assert text in stdout
         if does_not_contain is not None:
             if not isinstance(does_not_contain, list):
                 does_not_contain = [does_not_contain]
             for text in does_not_contain:
-                assert text not in output
+                assert text not in stdout
         if equals is not None:
-            assert output == equals
+            assert stdout == equals
+        if error_equals is not None:
+            assert stderr == error_equals
 
 
 @pytest.mark.parametrize("arg", ["-h", "--help"])
 def test_help(capsys, arg):
-    assert_stdout(capsys, [arg], contains="Grep Python files")
+    assert_output(capsys, [arg], contains="Grep Python files")
 
 
 def test_search(capsys):
     # Negative test to ensure we aren't accidentally grepping this test code,
     # which could happen if CWD is wrong.
-    assert_stdout(capsys, [".//*"], does_not_contain="Not real code")
-    assert_stdout(capsys, [".//Name"], contains="misc.py:3:12:    return an_arg")
+    assert_output(capsys, [".//*"], does_not_contain="Not real code")
+    assert_output(capsys, [".//Name"], contains="misc.py:3:12:    return an_arg")
 
 
 def test_search_file(capsys):
-    assert_stdout(
+    assert_output(
         capsys,
         [".//Name", "misc.py"],
         contains="return an_arg",
@@ -65,7 +70,7 @@ def test_search_file(capsys):
 
 
 def test_search_files(capsys):
-    assert_stdout(
+    assert_output(
         capsys,
         [".//Name", "misc.py", "other.py"],
         contains=[
@@ -76,7 +81,7 @@ def test_search_files(capsys):
 
 
 def test_xml_output(capsys):
-    assert_stdout(
+    assert_output(
         capsys,
         ["--xml", ".//Name", "misc.py"],
         contains=[
@@ -87,7 +92,7 @@ def test_xml_output(capsys):
 
 
 def test_quiet(capsys):
-    assert_stdout(
+    assert_output(
         capsys,
         ["--quiet", ".//Name", "misc.py"],
         equals="",
@@ -98,7 +103,7 @@ def test_quiet(capsys):
 
 
 def test_pipe_stdin(capsys):
-    assert_stdout(
+    assert_output(
         capsys,
         [".//Import", "-"],
         stdin="import os",
@@ -127,9 +132,17 @@ Expr(
     if sys.version_info < (3, 8):
         # Python 3.7 doesn't return end info
         expected, _ = re.subn(r" *end_(lineno|col_offset)=\d+,\n?", "", expected)
-    assert_stdout(
+    assert_output(
         capsys,
         ["--ast", "./*/*", "-"],
         stdin="a + b",
         equals=expected,
+    )
+
+
+def test_invalid_xpath(capsys):
+    assert_output(
+        capsys,
+        ["some nonsense"],
+        error_equals="Invalid XPath expression: some nonsense\n",
     )

@@ -14,6 +14,8 @@ import sys
 from io import IOBase
 from typing import cast
 
+from lxml.etree import XPathEvalError
+
 from pyastgrep import __version__
 from pyastgrep.printer import print_results
 from pyastgrep.search import search_python_files
@@ -102,18 +104,22 @@ def main(sys_args: list[str] | None = None, stdin: IOBase = None) -> int:
     if stdin is None:
         stdin = cast(IOBase, sys.stdin)  # mypy thinks stdin is `typing.IO`
     paths = [stdin if p == "-" else p for p in paths]
-    matches, errors = print_results(
-        search_python_files(
-            paths,
-            args.expr,
-            xpath2=args.xpath2,
-        ),
-        print_xml=args.xml,
-        print_ast=args.ast,
-        quiet=args.quiet,
-        before_context=before_context,
-        after_context=after_context,
-    )
+    try:
+        matches, errors = print_results(
+            search_python_files(
+                paths,
+                args.expr,
+                xpath2=args.xpath2,
+            ),
+            print_xml=args.xml,
+            print_ast=args.ast,
+            quiet=args.quiet,
+            before_context=before_context,
+            after_context=after_context,
+        )
+    except XPathEvalError:
+        print(f"Invalid XPath expression: {args.expr}", file=sys.stderr)
+        return ERROR
     # Match ripgrep:
     if errors and not args.quiet:
         return ERROR
