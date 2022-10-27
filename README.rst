@@ -185,8 +185,8 @@ Use as a library
 ----------------
 
 pyastgrep is structured internally to make it easy to use a library as well as
-a CLI. However, while we will try to break things without good reason, at this
-point we are not documenting or guaranteeing API stability on these functions.
+a CLI. However, while we will try not to break things without good reason, at this
+point we are not documenting or guaranteeing API stability for these functions.
 
 
 Contributing
