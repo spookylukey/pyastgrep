@@ -103,7 +103,7 @@ input file:
      ...
 
 You’ll also need some understanding of how to write XPath expressions (see links
-below), but the examples below should get you started.
+at the bottom), but the examples below should get you started.
 
 Examples
 --------
@@ -184,6 +184,12 @@ and used, and avoid detecting a function with the same name but from a different
 module. For these kinds of tasks, you might be interested in:
 
 * `Semgrep <https://semgrep.dev/>`_
+* `Fixit <https://github.com/Instagram/Fixit>`_
+
+If you are using this as a library, you should note that while AST works well
+for linting, it’s not as good for rewriting code, because AST does not contain
+or preserve things like formatting and comments. For a better approach, have a
+look at `libCST <https://github.com/Instagram/LibCST>`_.
 
 
 Use as a library
@@ -208,7 +214,6 @@ Run against all versions::
   tox
 
 
-Install
 
 Links
 -----
