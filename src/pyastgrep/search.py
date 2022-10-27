@@ -50,7 +50,16 @@ class ReadError:
     exception: Exception
 
 
+class NonElementReturned(ValueError):
+    pass
+
+
 def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] | None = None) -> Position | None:
+    if not hasattr(element, "xpath"):
+        # Mostly like an _ElementUnicodeResult, the result of a query that terminated in
+        # an attribute rather than a node. We have no way of getting from here to
+        # something representing an AST node.
+        raise NonElementReturned(element)
     try:
         linenos = xml.lxml_query(element, "./ancestor-or-self::*[@lineno][1]/@lineno")
         col_offsets = xml.lxml_query(element, "./ancestor-or-self::*[@col_offset][1]/@col_offset")
@@ -85,7 +94,7 @@ def search_python_files(
     paths: Sequence[str | IOBase],
     expression: str,
     xpath2: bool = False,
-) -> Generator[Match | MissingPath | ReadError, None, None]:
+) -> Generator[Match | MissingPath | ReadError | NonElementReturned, None, None]:
     """
     Perform a recursive search through Python files.
 
@@ -126,6 +135,10 @@ def search_python_files(
 
         for element in matching_elements:
             ast_node = node_mappings.get(element, None)
-            position = position_from_xml(element, node_mappings=node_mappings)
+            try:
+                position = position_from_xml(element, node_mappings=node_mappings)
+            except NonElementReturned as ex:
+                position = None
+                yield ex
             if position is not None and ast_node is not None:
                 yield Match(source, file_lines, element, position, ast_node)

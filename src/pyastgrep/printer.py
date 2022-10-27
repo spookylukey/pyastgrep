@@ -7,11 +7,11 @@ from typing import Iterable, cast
 import astpretty
 
 from . import xml
-from .search import Match, MissingPath, Pathlike, ReadError
+from .search import Match, MissingPath, NonElementReturned, Pathlike, ReadError
 
 
 def print_results(
-    results: Iterable[Match | MissingPath | ReadError],
+    results: Iterable[Match | MissingPath | ReadError | NonElementReturned],
     print_xml: bool = False,
     print_ast: bool = False,
     before_context: int = 0,
@@ -67,6 +67,9 @@ def print_results(
         elif isinstance(result, ReadError):
             print(f"Error: {result.path}: {result.exception}", file=stderr)
             continue
+        elif isinstance(result, NonElementReturned):
+            print(f"Error: XPath expression returned a value that is not an AST node: {result.args[0]}", file=stderr)
+            continue
 
         matches += 1
         position = result.position
@@ -74,7 +77,6 @@ def print_results(
         line = result.file_lines[line_index]
         if quiet:
             break
-
         # Previous result's 'after' lines
         flush_context_lines(result)
 

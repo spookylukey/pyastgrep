@@ -42,3 +42,12 @@ def test_re_search():
 def test_lower_case():
     output = run_print(DIR, './/ClassDef[lower-case(@name) = "myclass"]', xpath2=True).stdout
     assert "MyClass" in output
+
+
+def test_attribute():
+    """
+    XPath expressions resolving to attributes don't return anything
+    """
+    output = run_print(DIR, ".//Name/@id")
+    assert output.stdout == ""
+    assert "XPath expression returned a value that is not an AST node: assigned_string"
