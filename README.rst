@@ -148,6 +148,11 @@ Classes whose name matches a regular expression:
    $ pyastgrep ".//ClassDef[re:match('M.*', @name)]"
 
 
+This uses the Python `re.match
+<https://docs.python.org/3/library/re.html#re.match>`_ method. You can also use
+``re:search`` to use the Python `re.search
+<https://docs.python.org/3/library/re.html#re.search>`_ method.
+
 Docstrings of functions/methods whose value contains “hello”:
 
 .. code:: bash
