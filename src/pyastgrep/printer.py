@@ -60,15 +60,20 @@ def print_results(
                 printed_context_lines.add((path, line_index))
         queued_context_lines[:] = []
 
+    def do_error(message: str) -> None:
+        nonlocal errors
+        print(message, file=stderr)
+        errors += 1
+
     for result in results:
         if isinstance(result, MissingPath):
-            print(f"Error: {result.path} could not be found", file=stderr)
+            do_error(f"Error: {result.path} could not be found")
             continue
         elif isinstance(result, ReadError):
-            print(f"Error: {result.path}: {result.exception}", file=stderr)
+            do_error(f"Error: {result.path}: {result.exception}")
             continue
         elif isinstance(result, NonElementReturned):
-            print(f"Error: XPath expression returned a value that is not an AST node: {result.args[0]}", file=stderr)
+            do_error(f"Error: XPath expression returned a value that is not an AST node: {result.args[0]}")
             continue
 
         matches += 1

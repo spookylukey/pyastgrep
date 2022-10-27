@@ -50,4 +50,6 @@ def test_attribute():
     """
     output = run_print(DIR, ".//Name/@id")
     assert output.stdout == ""
-    assert "XPath expression returned a value that is not an AST node: assigned_string"
+    assert "XPath expression returned a value that is not an AST node: assigned_string" in output.stderr
+    assert output.retval[0] == 0
+    assert output.retval[1] > 0

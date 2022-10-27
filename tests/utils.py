@@ -31,6 +31,7 @@ else:
 class Output:
     stdout: str
     stderr: str
+    retval: tuple[int, int]
 
 
 def run_print(
@@ -50,7 +51,7 @@ def run_print(
     stdout = io.StringIO()
     stderr = io.StringIO()
     with chdir(cwd):
-        print_results(
+        retval = print_results(
             search_python_files(paths or ["."], expr, xpath2=xpath2),
             stdout=stdout,
             stderr=stderr,
@@ -58,4 +59,4 @@ def run_print(
             before_context=before_context,
             after_context=after_context,
         )
-    return Output(stdout=stdout.getvalue(), stderr=stderr.getvalue())
+    return Output(stdout=stdout.getvalue(), stderr=stderr.getvalue(), retval=retval)

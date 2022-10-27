@@ -1,3 +1,8 @@
+Version 0.3 - unreleased
+------------------------
+
+* Fixed various error handling issues
+
 Version 0.2 - 2022-10-26
 ------------------------
 * Changed dev status to ’Beta’
