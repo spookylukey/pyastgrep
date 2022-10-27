@@ -5,3 +5,7 @@ def function(arg):
     assigned_int = 123
     assigned_float = 3.14
     assigned_bool = True
+
+
+class MyClass:
+    pass

@@ -37,3 +37,8 @@ def test_re_search():
     output = run_print(DIR, './/Name[re:search("_.nt", @id)]').stdout
     assert "assigned_int" in output
     assert "assigned_str" not in output
+
+
+def test_lower_case():
+    output = run_print(DIR, './/ClassDef[lower-case(@name) = "myclass"]', xpath2=True).stdout
+    assert "MyClass" in output

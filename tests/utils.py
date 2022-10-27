@@ -37,6 +37,7 @@ def run_print(
     cwd: str,
     expr: str,
     paths: list[str] | None = None,
+    xpath2: bool = False,
     print_xml: bool = False,
     before_context: int = 0,
     after_context: int = 0,
@@ -50,7 +51,7 @@ def run_print(
     stderr = io.StringIO()
     with chdir(cwd):
         print_results(
-            search_python_files(paths or ["."], expr),
+            search_python_files(paths or ["."], expr, xpath2=xpath2),
             stdout=stdout,
             stderr=stderr,
             print_xml=print_xml,
