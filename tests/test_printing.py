@@ -1,3 +1,4 @@
+import io
 import os.path
 
 from tests.utils import run_print
@@ -60,3 +61,13 @@ context_example.py:7:5:    a_name = "Fred"
 context_example.py-8-    # Final comment
 """.lstrip()
     )
+
+
+def test_encoding():
+    # Use stdin method rather than separate file, because one of our linters
+    # (pyupgrade) complains about the encoding and workarounds fail.
+
+    # We should be able to decode it, and then print it in normal UTF-8
+    file_data = b'# -*- coding: windows-1252 -*-\n\nX = "\x85"\n'
+    output = run_print(DIR, './/Name[@id="X"]', [io.BytesIO(file_data)]).stdout
+    assert output == '<stdin>:3:1:X = "…"\n'

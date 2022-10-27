@@ -37,7 +37,7 @@ class Output:
 def run_print(
     cwd: str,
     expr: str,
-    paths: list[str] | None = None,
+    paths: list[str | io.IOBase] | None = None,
     xpath2: bool = False,
     print_xml: bool = False,
     before_context: int = 0,

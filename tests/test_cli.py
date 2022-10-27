@@ -25,7 +25,7 @@ def assert_output(
 ):
     try:
         with chdir(DIR):
-            main(args, stdin=io.StringIO(stdin) if stdin is not None else None)
+            main(args, stdin=io.BytesIO(stdin.encode("utf-8")) if stdin is not None else None)
     except SystemExit:
         pass
     output = capsys.readouterr()

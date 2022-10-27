@@ -4,6 +4,7 @@ from __future__ import annotations
 import ast
 import glob
 import os
+import re
 from dataclasses import dataclass
 from io import IOBase
 from pathlib import Path
@@ -90,6 +91,27 @@ def get_files_to_search(paths: Sequence[str | IOBase]) -> Generator[Path | IOBas
                 yield Path(filename)
 
 
+ENCODING_RE = re.compile(b"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
+
+
+def get_encoding(python_file_bytes: bytes) -> str:
+    # Search in first two lines. But what does a line break character look like
+    # if we don't know the encoding. Have to assume '\n' for now
+    first_lb = python_file_bytes.find(b"\n")
+    if first_lb < 0:
+        first_lb = 0
+    second_lb = python_file_bytes.find(b"\n", first_lb + 1)
+    if second_lb < 0:
+        second_lb = 0
+    last_lb = max(first_lb, second_lb)
+    first_two_lines = python_file_bytes[0:last_lb]
+    coding_match = ENCODING_RE.match(first_two_lines)
+    if coding_match:
+        return coding_match.groups()[0].decode("ascii")
+    else:
+        return "utf-8"
+
+
 def search_python_files(
     paths: Sequence[str | IOBase],
     expression: str,
@@ -113,12 +135,11 @@ def search_python_files(
         else:
             source = path
             try:
-                with open(path) as f:
+                with open(path, "rb") as f:
                     contents = f.read()
             except OSError as ex:
                 yield ReadError(str(path), ex)
                 continue
-        file_lines = contents.splitlines()
 
         try:
             parsed_ast: ast.AST = ast.parse(contents, str(source))
@@ -126,6 +147,8 @@ def search_python_files(
             yield ReadError(str(source), ex)
             continue
 
+        encoding = get_encoding(contents)
+        file_lines = contents.decode(encoding).splitlines()
         xml_ast = convert_to_xml(
             parsed_ast,
             node_mappings,
