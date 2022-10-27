@@ -70,7 +70,6 @@ def get_query_func(*, xpath2: bool) -> Callable:
 
 def get_files_to_search(paths: Sequence[str | IOBase]) -> Generator[Path | IOBase | MissingPath, None, None]:
     for path in paths:
-        # TODO handle missing files by yielding some kind of error object
         if isinstance(path, IOBase):
             yield path
         elif not os.path.lexists(path):
