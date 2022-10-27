@@ -67,10 +67,10 @@ def print_results(
 
     for result in results:
         if isinstance(result, MissingPath):
-            do_error(f"Error: {result.path} could not be found")
+            do_error(f"{result.path}: No such file or directory")
             continue
         elif isinstance(result, ReadError):
-            do_error(f"Error: {result.path}: {result.exception}")
+            do_error(f"{result.path}: {result.exception}")
             continue
         elif isinstance(result, NonElementReturned):
             do_error(f"Error: XPath expression returned a value that is not an AST node: {result.args[0]}")

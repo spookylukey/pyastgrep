@@ -81,7 +81,7 @@ def get_files_to_search(paths: Sequence[str | IOBase]) -> Generator[Path | IOBas
     for path in paths:
         if isinstance(path, IOBase):
             yield path
-        elif not os.path.lexists(path):
+        elif not os.path.exists(path):
             yield MissingPath(path)
         elif os.path.isfile(path):
             yield Path(path)
