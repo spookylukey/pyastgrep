@@ -102,7 +102,10 @@ def main(sys_args: list[str] | None = None, stdin: IOBase = None) -> int:
         paths = args.path
 
     if stdin is None:
-        stdin = cast(IOBase, sys.stdin)  # mypy thinks stdin is `typing.IO`
+        # Need to use .buffer here, to get bytes version, not text
+        # mypy thinks type is `typing.BinaryIO`, which is not a runtime thing
+        # we can `isinstance` against, so we have to cast.
+        stdin = cast(IOBase, sys.stdin.buffer)
     paths = [stdin if p == "-" else p for p in paths]
     try:
         matches, errors = print_results(

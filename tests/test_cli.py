@@ -4,6 +4,7 @@ import io
 import os
 import os.path
 import re
+import subprocess
 import sys
 
 import pytest
@@ -146,3 +147,24 @@ def test_invalid_xpath(capsys):
         ["some nonsense"],
         error_equals="Invalid XPath expression: some nonsense\n",
     )
+
+
+def test_stdin_bytes():
+    # To really test what is going on with stdin, we go the whole way and use a
+    # subprocess on ourselves. This catches the bug where we use stdin in text
+    # mode, which causes a TypeError
+    process = subprocess.Popen(
+        ["pyastgrep", "-q", "./*/*", "-"],
+        stdin=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+    )
+    stdout, stderr = process.communicate(input=b"x = 1\n")
+    assert stderr == b""
+    assert stdout == b""
+    assert process.returncode == 0
+
+    # Another way of testing the same thing, without relying on getting
+    # Popen stuff correct
+    result = subprocess.run("echo 'x = 1' | pyastgrep --xml './*/*' -", shell=True, capture_output=True)
+    assert result.stdout.startswith(b"<stdin>:1:1:x = 1\n<Assign")
