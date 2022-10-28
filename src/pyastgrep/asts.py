@@ -4,12 +4,13 @@ from __future__ import annotations
 import ast
 import codecs
 from functools import partial
+from typing import Callable
 
 from lxml import etree
 from lxml.etree import _Element
 
 
-def _set_encoded_literal(set_fn: partial, literal: bool | int | str | None) -> None:
+def _set_encoded_literal(set_fn: Callable[[str | bytes], None], literal: bool | int | str | None) -> None:
     if isinstance(literal, (bool, int, float)):
         literal = str(literal)
     if literal is None:

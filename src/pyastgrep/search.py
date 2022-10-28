@@ -8,7 +8,7 @@ import re
 from dataclasses import dataclass
 from io import IOBase
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Generator, Sequence
+from typing import TYPE_CHECKING, Callable, Generator, Iterable, Sequence
 
 from lxml.etree import _Element
 
@@ -71,7 +71,7 @@ def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] 
     return None
 
 
-def get_query_func(*, xpath2: bool) -> Callable:
+def get_query_func(*, xpath2: bool) -> Callable[[_Element, str], Iterable[_Element]]:
     if xpath2:
         return xml.elementpath_query
     else:
