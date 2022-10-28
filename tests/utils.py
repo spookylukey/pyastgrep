@@ -3,6 +3,7 @@ from __future__ import annotations
 import contextlib
 import io
 import os
+import typing
 from dataclasses import dataclass
 
 from pyastgrep.printer import print_results
@@ -37,7 +38,7 @@ class Output:
 def run_print(
     cwd: str,
     expr: str,
-    paths: list[str | io.IOBase] | None = None,
+    paths: list[str | typing.BinaryIO] | None = None,
     xpath2: bool = False,
     print_xml: bool = False,
     before_context: int = 0,

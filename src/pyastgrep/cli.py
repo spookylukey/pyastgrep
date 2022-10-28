@@ -11,8 +11,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from io import IOBase
-from typing import cast
+from typing import BinaryIO
 
 from lxml.etree import XPathEvalError
 
@@ -85,7 +84,7 @@ NO_MATCH_FOUND = 1
 ERROR = 2
 
 
-def main(sys_args: list[str] | None = None, stdin: IOBase = None) -> int:
+def main(sys_args: list[str] | None = None, stdin: BinaryIO = None) -> int:
     """Entrypoint for CLI."""
     args = parser.parse_args(args=sys_args)
 
@@ -95,7 +94,7 @@ def main(sys_args: list[str] | None = None, stdin: IOBase = None) -> int:
         print("ERROR: Context cannot be specified when suppressing output.", file=sys.stderr)
         return ERROR
 
-    paths: list[str | IOBase]
+    paths: list[str | BinaryIO]
     if len(args.path) == 0:
         paths = ["."]
     else:
@@ -105,7 +104,7 @@ def main(sys_args: list[str] | None = None, stdin: IOBase = None) -> int:
         # Need to use .buffer here, to get bytes version, not text
         # mypy thinks type is `typing.BinaryIO`, which is not a runtime thing
         # we can `isinstance` against, so we have to cast.
-        stdin = cast(IOBase, sys.stdin.buffer)
+        stdin = sys.stdin.buffer
     paths = [stdin if p == "-" else p for p in paths]
     try:
         matches, errors = print_results(

@@ -6,9 +6,8 @@ import glob
 import os
 import re
 from dataclasses import dataclass
-from io import IOBase
 from pathlib import Path
-from typing import TYPE_CHECKING, Callable, Generator, Iterable, Sequence
+from typing import TYPE_CHECKING, BinaryIO, Callable, Generator, Iterable, Sequence
 
 from lxml.etree import _Element
 
@@ -78,17 +77,19 @@ def get_query_func(*, xpath2: bool) -> Callable[[_Element, str], Iterable[_Eleme
         return xml.lxml_query
 
 
-def get_files_to_search(paths: Sequence[str | IOBase]) -> Generator[Path | IOBase | MissingPath, None, None]:
+def get_files_to_search(paths: Sequence[str | BinaryIO]) -> Generator[Path | BinaryIO | MissingPath, None, None]:
     for path in paths:
-        if isinstance(path, IOBase):
-            yield path
-        elif not os.path.exists(path):
-            yield MissingPath(path)
-        elif os.path.isfile(path):
-            yield Path(path)
+        if isinstance(path, str):
+            if not os.path.exists(path):
+                yield MissingPath(path)
+            elif os.path.isfile(path):
+                yield Path(path)
+            else:
+                for filename in glob.glob(path + "/**/*.py", recursive=True):
+                    yield Path(filename)
         else:
-            for filename in glob.glob(path + "/**/*.py", recursive=True):
-                yield Path(filename)
+            # BinaryIO
+            yield path
 
 
 ENCODING_RE = re.compile(b"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
@@ -113,7 +114,7 @@ def get_encoding(python_file_bytes: bytes) -> str:
 
 
 def search_python_files(
-    paths: Sequence[str | IOBase],
+    paths: Sequence[str | BinaryIO],
     expression: str,
     xpath2: bool = False,
 ) -> Generator[Match | MissingPath | ReadError | NonElementReturned, None, None]:
@@ -126,13 +127,10 @@ def search_python_files(
     for path in get_files_to_search(paths):
         node_mappings: dict[_Element, ast.AST] = {}
         source: Pathlike
-        if isinstance(path, IOBase):
-            source = "<stdin>"
-            contents = path.read()
-        elif isinstance(path, MissingPath):
+        if isinstance(path, MissingPath):
             yield path
             continue
-        else:
+        elif isinstance(path, Path):
             source = path
             try:
                 with open(path, "rb") as f:
@@ -140,6 +138,9 @@ def search_python_files(
             except OSError as ex:
                 yield ReadError(str(path), ex)
                 continue
+        else:
+            source = "<stdin>"
+            contents = path.read()
 
         try:
             parsed_ast: ast.AST = ast.parse(contents, str(source))

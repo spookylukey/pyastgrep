@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import sys
-from io import IOBase
-from typing import Iterable, cast
+from typing import Iterable, TextIO
 
 import astpretty
 
@@ -16,14 +15,14 @@ def print_results(
     print_ast: bool = False,
     before_context: int = 0,
     after_context: int = 0,
-    stdout: IOBase = None,
-    stderr: IOBase = None,
+    stdout: TextIO = None,
+    stderr: TextIO = None,
     quiet: bool = False,
 ) -> tuple[int, int]:
     if stdout is None:
-        stdout = cast(IOBase, sys.stdout)
+        stdout = sys.stdout
     if stderr is None:
-        stderr = cast(IOBase, sys.stderr)
+        stderr = sys.stderr
     matches = 0
     errors = 0  # TODO
 
