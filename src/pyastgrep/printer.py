@@ -42,7 +42,7 @@ def print_results(
                     (result.path, context_line_index, f"{result.path}-{context_line_index + 1}-{context_line}")
                 )
 
-    def flush_context_lines(compare_result: Match | None) -> None:
+    def flush_context_lines(*, before_result: Match | None = None) -> None:
         """
         Print queued context lines, but not if they would be covered by the passed
         in result.
@@ -50,10 +50,10 @@ def print_results(
 
         for path, line_index, to_print in queued_context_lines:
             if (
-                compare_result is None
-                or path != compare_result.path  # from a different file => print
+                before_result is None
+                or path != before_result.path  # from a different file => print
                 or line_index
-                < compare_result.position.lineno - before_context - 1  # Before the context for current result => print
+                < before_result.position.lineno - before_context - 1  # Before the context for current result => print
             ):
                 print(to_print, file=stdout)
                 printed_context_lines.add((path, line_index))
@@ -82,12 +82,12 @@ def print_results(
         if quiet:
             break
         # Previous result's 'after' lines
-        flush_context_lines(result)
+        flush_context_lines(before_result=result)
 
         # This result's 'before' lines
         if before_context:
             queue_context_lines(result, list(range(max(0, line_index - before_context), line_index)))
-            flush_context_lines(None)
+            flush_context_lines()
 
         # The actual result
         print(f"{result.path}:{line_index + 1}:{position.col_offset + 1}:{line}", file=stdout)
@@ -105,6 +105,6 @@ def print_results(
                 result, list(range(line_index + 1, min(len(result.file_lines), line_index + after_context + 1)))
             )
     # Last result
-    flush_context_lines(None)
+    flush_context_lines()
 
     return (matches, errors)
