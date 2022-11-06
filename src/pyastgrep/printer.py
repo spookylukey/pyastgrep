@@ -3,8 +3,6 @@ from __future__ import annotations
 import sys
 from typing import Iterable, TextIO
 
-import astpretty
-
 from . import xml
 from .search import Match, MissingPath, NonElementReturned, Pathlike, ReadError
 
@@ -19,6 +17,10 @@ def print_results(
     stderr: TextIO = None,
     quiet: bool = False,
 ) -> tuple[int, int]:
+    if print_ast:
+        # Don't import unless needed
+        import astpretty
+
     if stdout is None:
         stdout = sys.stdout
     if stderr is None:
