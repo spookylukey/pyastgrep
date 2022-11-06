@@ -65,7 +65,9 @@ def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] 
 
 def get_query_func(*, xpath2: bool) -> Callable[[_Element, str], Iterable[_Element]]:
     if xpath2:
-        return xml.elementpath_query
+        from .xpath2 import elementpath_query
+
+        return elementpath_query
     else:
         return xml.lxml_query
 
