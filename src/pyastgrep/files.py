@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Generator, Sequence
 
-ENCODING_RE = re.compile(b"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
-
 
 @dataclass
 class MissingPath:
@@ -30,19 +28,27 @@ def get_files_to_search(paths: Sequence[str | BinaryIO]) -> Generator[Path | Bin
             yield path
 
 
+# See https://peps.python.org/pep-0263/
+# I couldn't find a stdlib function for this
+_ENCODING_RE = re.compile(b"^[ \t\f]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)")
+
+
 def get_encoding(python_file_bytes: bytes) -> str:
-    # Search in first two lines. But what does a line break character look like
-    # if we don't know the encoding. Have to assume '\n' for now
-    first_lb = python_file_bytes.find(b"\n")
-    if first_lb < 0:
-        first_lb = 0
-    second_lb = python_file_bytes.find(b"\n", first_lb + 1)
-    if second_lb < 0:
-        second_lb = 0
-    last_lb = max(first_lb, second_lb)
-    first_two_lines = python_file_bytes[0:last_lb]
-    coding_match = ENCODING_RE.match(first_two_lines)
-    if coding_match:
-        return coding_match.groups()[0].decode("ascii")
-    else:
-        return "utf-8"
+    # Search in first two lines:
+    current_idx = 0
+    for line_num in (1, 2):
+        # what does a line break character look like
+        # if we don't know the encoding? Have to assume '\n' for now
+        linebreak_idx = python_file_bytes.find(b"\n", current_idx)
+        if linebreak_idx < 0:
+            line = python_file_bytes[current_idx:]
+        else:
+            line = python_file_bytes[current_idx:linebreak_idx]
+        coding_match = _ENCODING_RE.match(line)
+        if coding_match:
+            return coding_match.groups()[0].decode("ascii")
+        if linebreak_idx < 0:
+            break
+        else:
+            current_idx = linebreak_idx + 1
+    return "utf-8"
