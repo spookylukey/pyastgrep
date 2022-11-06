@@ -24,7 +24,7 @@ def print_results(
     if stderr is None:
         stderr = sys.stderr
     matches = 0
-    errors = 0  # TODO
+    errors = 0
 
     printed_context_lines: set[tuple[Pathlike, int]] = set()
     # This is more complex than just iterating through results due to before and after context,
