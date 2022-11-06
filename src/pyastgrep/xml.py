@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 
-import elementpath  # XPath 2.0 functions
 from lxml import etree
 from lxml.etree import _Element, _ElementUnicodeResult, tostring
 
@@ -11,10 +10,6 @@ __all__ = ["tostring", "lxml_query"]
 
 def lxml_query(element: _Element, expression: str) -> list[_Element | _ElementUnicodeResult]:
     return element.xpath(expression)
-
-
-def elementpath_query(element: _Element, expression: str) -> list[_Element | _ElementUnicodeResult]:
-    return elementpath.select(element, expression)
 
 
 regex_ns = etree.FunctionNamespace("https://github.com/spookylukey/pyastgrep")
