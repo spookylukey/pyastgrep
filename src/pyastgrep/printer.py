@@ -28,11 +28,18 @@ def print_results(
     matches = 0
     errors = 0
 
-    printed_context_lines: set[tuple[Pathlike, int]] = set()
-    # This is more complex than just iterating through results due to before and after context,
-    # which can result in overlapping matches. We have to know if there is another result
-    # from the same file before we can print "after" context lines for the current result.
+    # Printing context lines:
+    #
+    # This function is quite complex due to:
+    # - handling before and after context,
+    # - including overlapping context
+    # - handling the fact that a single line may be printed multiple times
+    #   if there is a match on multiple parts of the line.
+    # - ensuring that we print results as soon as we get them,
+    #   rather than waiting (grouping by file would simplify some things)
+    # - edge conditions
 
+    printed_context_lines: set[tuple[Pathlike, int]] = set()
     queued_context_lines: list[tuple[Pathlike, int, str]] = []
 
     def queue_context_lines(result: Match, context_line_indices: list[int]) -> None:
