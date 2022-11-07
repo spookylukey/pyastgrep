@@ -52,24 +52,24 @@ and how that is mapped to XML. Some methods for doing that are below:
    source lines. To get the statements within the body, you can use an XPath
    expression ``/Module/body/*`` or ``./*/*``:
 
-  .. code:: bash
+   .. code:: bash
 
-     $ pyastgrep --xml --ast './*/*' myfile.py
-     myfile.py:1:1:import os
-     Import(
-         lineno=1,
-         col_offset=0,
-         end_lineno=1,
-         end_col_offset=9,
-         names=[alias(lineno=1, col_offset=7, end_lineno=1, end_col_offset=9, name='os', asname=None)],
-     )
-     ...
-     <Import lineno="1" col_offset="0">
-       <names>
-         <alias lineno="1" col_offset="7" type="str" name="os"/>
-       </names>
-     </Import>
-     ...
+      $ pyastgrep --xml --ast './*/*' myfile.py
+      myfile.py:1:1:import os
+      Import(
+          lineno=1,
+          col_offset=0,
+          end_lineno=1,
+          end_col_offset=9,
+          names=[alias(lineno=1, col_offset=7, end_lineno=1, end_col_offset=9, name='os', asname=None)],
+      )
+      ...
+      <Import lineno="1" col_offset="0">
+        <names>
+          <alias lineno="1" col_offset="7" type="str" name="os"/>
+        </names>
+      </Import>
+      ...
 
 
 Note that the XML format is a very direct translation of the Python AST as
