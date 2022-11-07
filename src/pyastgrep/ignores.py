@@ -145,7 +145,8 @@ def find_gitignore_files(starting_path: Path, *, recurse_up: bool = True) -> lis
 
 def get_global_gitignore() -> Path | None:
     try:
-        return Path(subprocess.check_output(["git", "config", "--get", "core.excludesfile"], text=True).strip())
+        path = subprocess.check_output(["git", "config", "--get", "core.excludesfile"], text=True).strip()
+        return Path(path).expanduser()
     except Exception:
         # Most likely the user doesn't have git installed, or it's not configured
         # correctly. In this case we don't want to bug the user with irrelevant
