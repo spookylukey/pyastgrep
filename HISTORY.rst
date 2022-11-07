@@ -1,3 +1,8 @@
+Version 0.6 - 2022-11-07
+------------------------
+
+* Fixed several cases where .gitignore patterns were not being interpreted correctly.
+
 Version 0.5 - 2022-11-07
 ------------------------
 
