@@ -1,3 +1,9 @@
+Version 0.7 - 2022-11-07
+------------------------
+
+* Fixed crasher if global gitignore path contained ``~`` (tilde). Thanks
+  `@lost-theory <https://github.com/lost-theory>`_!
+
 Version 0.6 - 2022-11-07
 ------------------------
 
