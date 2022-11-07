@@ -13,3 +13,8 @@ def test_broken_syntax():
 def test_missing_file():
     output = run_print(DIR, "./*/*", ["missing.py"])
     assert output.stderr == "missing.py: No such file or directory\n"
+
+
+def test_non_ast_node_xpath():
+    output = run_print(DIR, "count(.//FunctionDef)", ["name.py"])
+    assert output.stderr == "Error: XPath expression returned a value that is not an AST node: 1.0\n"

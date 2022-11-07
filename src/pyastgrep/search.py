@@ -116,7 +116,13 @@ def search_python_files(
 
         matching_elements = query_func(xml_ast, expression)
 
-        for element in matching_elements:
+        try:
+            iterator = iter(matching_elements)
+        except TypeError:
+            yield NonElementReturned(matching_elements)
+            continue
+
+        for element in iterator:
             ast_node = node_mappings.get(element, None)
             try:
                 position = position_from_xml(element, node_mappings=node_mappings)
