@@ -1,4 +1,4 @@
-Version 0.4 - unreleased
+Version 0.4 - 2022-11-07
 ------------------------
 
 * Handle non-UTF8 encodings
