@@ -135,7 +135,7 @@ Names longer than 42 characters:
 
    $ pyastgrep "//ExceptHandler[body//Raise/exc//Name and not(contains(body//Raise/exc//Name/@id, type/Name/@id))]"
 
-Functions whose name contain a substring:
+Functions whose name contain a certain substring:
 
 .. code:: bash
 
@@ -159,7 +159,7 @@ Docstrings of functions/methods whose value contains “hello”:
 
    $ pyastgrep './/FunctionDef/body/Expr[1]/value/Constant[@type="str"][contains(@value, "hello")]'
 
-For-loop variables called ``i`` or ``j``:
+For-loop variables called ``i`` or ``j`` (including those created by tuple unpacking):
 
 .. code:: bash
 
@@ -220,12 +220,28 @@ Get test suite running::
   pip install -r requirements-test.txt
   pytest
 
-Run against all versions::
+Run tests against all versions::
 
   pip install tox
   tox
 
+Please install `pre-commit <https://pre-commit.com/>`_ in the repo::
 
+  pre-commit install
+
+This will add Git hooks to run linters when committing, which ensures our style
+(black) and other things.
+
+You can manually run these linters using::
+
+  pre-commit run --all --all-files
+
+Run mypy (we only expect it to pass on Python 3.10)::
+
+  mypy .
+
+Bug fixes and other changes can be submitted using pull requests on GitHub. For
+large changes, it’s worth opening an issue first to discuss the approach.
 
 Links
 -----
