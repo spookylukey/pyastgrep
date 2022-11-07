@@ -37,9 +37,9 @@ class Output:
 
 
 def run_print(
-    cwd: str,
+    cwd: Path,
     expr: str,
-    paths: list[str | typing.BinaryIO] | None = None,
+    paths: list[str | Path | typing.BinaryIO] | None = None,
     xpath2: bool = False,
     print_xml: bool = False,
     before_context: int = 0,
@@ -54,7 +54,11 @@ def run_print(
     stderr = io.StringIO()
     with chdir(cwd):
         retval = print_results(
-            search_python_files(paths or ["."], expr, xpath2=xpath2),
+            search_python_files(
+                [Path(p) if isinstance(p, str) else p for p in paths] if paths else [Path(".")],
+                expr,
+                xpath2=xpath2,
+            ),
             stdout=stdout,
             stderr=stderr,
             print_xml=print_xml,

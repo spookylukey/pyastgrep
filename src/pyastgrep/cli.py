@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 from typing import BinaryIO
 
 from lxml.etree import XPathEvalError
@@ -94,18 +95,18 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO = None) -> int:
         print("ERROR: Context cannot be specified when suppressing output.", file=sys.stderr)
         return ERROR
 
-    paths: list[str | BinaryIO]
-    if len(args.path) == 0:
-        paths = ["."]
-    else:
-        paths = args.path
-
     if stdin is None:
         # Need to use .buffer here, to get bytes version, not text
         # mypy thinks type is `typing.BinaryIO`, which is not a runtime thing
         # we can `isinstance` against, so we have to cast.
         stdin = sys.stdin.buffer
-    paths = [stdin if p == "-" else p for p in paths]
+
+    paths: list[Path | BinaryIO]
+    if len(args.path) == 0:
+        paths = [Path(".")]
+    else:
+        paths = [stdin if p == "-" else Path(p) for p in args.path]
+
     try:
         matches, errors = print_results(
             search_python_files(
