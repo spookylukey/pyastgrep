@@ -21,6 +21,8 @@ class DirWalker:
         pathspecs: list[PathSpec] = None,
         init_global_pathspecs: bool = True,
         start_directory: Path | None = None,
+        working_dir: Path | None = None,
+        absolute_base: bool = False,
     ):
         # DirWalker is immutable outside __init__
         self.glob: str = glob
@@ -29,24 +31,38 @@ class DirWalker:
         if init_global_pathspecs:
             global_gitignore = get_global_gitignore()
             if global_gitignore:
-                pathspecs.append(pathspec_for_gitignore(global_gitignore))
+                pathspecs.append(pathspec_for_gitignore(global_gitignore, is_global_gitignore=True))
             # POSIX hidden files:
             pathspecs.append(PathSpec([GitWildMatchPattern(".*")]))
         self.pathspecs: list[PathSpec] = pathspecs
         self.start_directory: Path | None = start_directory
+        self.working_dir = working_dir
+        self.absolute_base: bool = absolute_base
 
-    def for_dir(self, directory: Path) -> DirWalker:
+    def for_dir(self, directory: Path, working_dir: Path) -> DirWalker:
         """
         Return a new DirWalker, customised for the directory.
         """
+        # Here we keep the already loaded global gitignore, and add any
+        # more needed, up to and including the current directory.
+        base_directory = directory.resolve()
+        pathspecs = self.pathspecs + [
+            pathspec_for_gitignore(ignorepath) for ignorepath in find_gitignore_files(base_directory, recurse_up=True)
+        ]
+        # We also need to add a negative override to ensure that paths specified
+        # directly are not ignored.
+        if directory != Path("."):
+            # TODO this doesn't work in all cases, e.g. if an exclude is specified
+            # in a subdirectory `.gitignore` which matches the passed in directory.
+            pathspecs = [add_negative_dir_pattern(pathspec, directory) for pathspec in pathspecs]
+
         return DirWalker(
             glob=self.glob,
-            # Here we keep the already loaded global gitignore, and add any
-            # more needed, up to and including the current directory
-            pathspecs=self.pathspecs
-            + [pathspec_for_gitignore(ignorepath) for ignorepath in find_gitignore_files(directory, recurse_up=True)],
+            pathspecs=pathspecs,
             init_global_pathspecs=False,
-            start_directory=directory,
+            start_directory=base_directory,
+            working_dir=working_dir,
+            absolute_base=directory.is_absolute(),
         )
 
     def for_subdir(self, directory: Path) -> DirWalker:
@@ -62,34 +78,44 @@ class DirWalker:
         extra_pathspecs = [
             pathspec_for_gitignore(ignorepath) for ignorepath in find_gitignore_files(directory, recurse_up=False)
         ]
+
         return DirWalker(
             glob=self.glob,
             pathspecs=self.pathspecs + extra_pathspecs,
             init_global_pathspecs=False,
             start_directory=directory,
+            working_dir=self.working_dir,
+            absolute_base=self.absolute_base,
         )
 
     def walk(self) -> Generator[Path, None, None]:
-        if self.start_directory is None:
+        if self.start_directory is None or self.working_dir is None:
             raise AssertionError("Must use `for_dir` before `walk`")
         for filepath in self.start_directory.glob(self.glob):
-            if any(pathspec.match_file(filepath.name) for pathspec in self.pathspecs):
-                continue
             if filepath.is_file():
-                yield filepath
+                if any(pathspec.match_file(filepath) for pathspec in self.pathspecs):
+                    continue
+                if self.absolute_base:
+                    yield filepath
+                else:
+                    yield filepath.resolve().relative_to(self.working_dir)
         for subdir in self.start_directory.iterdir():
-            if any(pathspec.match_file(subdir.name) for pathspec in self.pathspecs):
-                continue
             if subdir.is_dir():
+                if any(pathspec.match_file(subdir) for pathspec in self.pathspecs):
+                    continue
                 yield from self.for_subdir(subdir).walk()
 
 
-def pathspec_for_gitignore(gitignore_file: Path) -> PathSpec:
+def pathspec_for_gitignore(gitignore_file: Path, is_global_gitignore: bool = False) -> PathSpec:
     with open(gitignore_file) as fp:
-        return GitIgnoreSpec.from_lines(fp)
+        spec = GitIgnoreSpec.from_lines(fp)
+        if is_global_gitignore:
+            return spec
+        else:
+            return DirectoryPathSpec(gitignore_file.parent, spec)
 
 
-def find_gitignore_files(working_dir: Path, *, recurse_up: bool = True) -> list[Path]:
+def find_gitignore_files(starting_path: Path, *, recurse_up: bool = True) -> list[Path]:
     """
     For a given working dir, returns a list of .gitignore files
     that apply to it.
@@ -98,7 +124,7 @@ def find_gitignore_files(working_dir: Path, *, recurse_up: bool = True) -> list[
 
     # Not 100% sure this is correct or what ripgrep does,
     # but it probably covers the most common setups
-    current_path = working_dir.resolve()
+    current_path = starting_path.resolve()
     while True:
         candidate = current_path / ".gitignore"
         if candidate.exists():
@@ -125,3 +151,39 @@ def get_global_gitignore() -> Path | None:
         # correctly. In this case we don't want to bug the user with irrelevant
         # warnings, so just ignore completely.
         return None
+
+
+class DirectoryPathSpec:
+    """
+    PathSpec object for a specific directory.
+    """
+
+    # We have to keep track of the location of a .gitignore file, as well as
+    # its contents, in order to correctly handle patterns like:
+    #
+    #   /foo
+    #
+    # which should match `foo` in the same directory as the .gitignore file,
+    # but not in other directories.
+    def __init__(self, location: Path, pathspec: PathSpec):
+        self.location = location
+        self.pathspec = pathspec
+
+    def match_file(self, path: Path) -> bool:
+        try:
+            relative = path.relative_to(self.location)
+        except ValueError:
+            # Could happen if `path` is not relative to (i.e. below) self.location.
+            # Possible for symlinks perhaps? How do we interpret the
+            # .gitignore file correctly if we don't know where the file
+            # is relative to it?
+            # Rather than crash, we ignore the file
+            return False
+        else:
+            return self.pathspec.match_file(relative)
+
+
+def add_negative_dir_pattern(pathspec: PathSpec, directory: Path) -> PathSpec:
+    if isinstance(pathspec, DirectoryPathSpec):
+        return DirectoryPathSpec(pathspec.location, add_negative_dir_pattern(pathspec.pathspec, directory))
+    return pathspec.__class__(pathspec.patterns + [GitWildMatchPattern(f"!{directory}/")])

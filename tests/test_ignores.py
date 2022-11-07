@@ -1,7 +1,9 @@
 from pathlib import Path
 
+from pathspec.gitignore import GitIgnoreSpec
+
 from pyastgrep.files import get_files_to_search
-from pyastgrep.ignores import find_gitignore_files
+from pyastgrep.ignores import DirectoryPathSpec, find_gitignore_files
 from tests.utils import chdir
 
 DIR = Path(__file__).resolve().parent / "examples" / "test_ignores"
@@ -12,7 +14,7 @@ DIR_FROM_ROOT = DIR.relative_to(REPO_ROOT)
 def test_find_gitignore_files():
     with chdir(DIR):
         ignore_files = find_gitignore_files(Path("."), recurse_up=True)
-        rel_ignore_files = [p.relative_to(REPO_ROOT) for p in ignore_files]
+        rel_ignore_files = [p.resolve().relative_to(REPO_ROOT) for p in ignore_files]
         assert rel_ignore_files == [
             Path("tests/examples/test_ignores/.gitignore"),
             Path(".gitignore"),
@@ -20,7 +22,14 @@ def test_find_gitignore_files():
 
 
 def test_default_ignores():
-    FOUND = ["__init__.py", "not_ignored.py", "subdir/not_ignored.py"]
+    FOUND = [
+        "__init__.py",
+        "not_ignored.py",
+        "subdir/not_ignored.py",
+        # .gitgnore has /subsubdir, which should only match
+        # if it is in the 'root' (relative to that .gitignore file)
+        "subdir/subsubdir/not_ignored.py",
+    ]
 
     IGNORED = [
         # `.custom_hidden` should be ignored by default
@@ -35,6 +44,8 @@ def test_default_ignores():
         "custom_gitignored/__init__.py",
         "custom_gitignored/should_be_ignored2.py",
         "custom_gitignored/subdir/should_be_ignored2.py",
+        # /subsubdir is in this subdir's .gitignore
+        "subsubdir/not_ignored.py",
     ]
 
     with chdir(DIR):
@@ -75,3 +86,23 @@ def test_override_on_cli():
 
     for p in ["node_modules/subdir/should_be_ignored.py", "node_modules/should_be_ignored.py"]:
         assert Path(p) in files
+
+
+def test_DirectoryPathSpec():
+    dps_root = DirectoryPathSpec(Path("."), GitIgnoreSpec.from_lines(["/bar", "baz"]))
+    dps_subdir = DirectoryPathSpec(Path("subdir"), GitIgnoreSpec.from_lines(["/bar", "baz"]))
+
+    # Path in the root should match absolute path for gitignore in the root
+    assert dps_root.match_file(Path("baz"))
+
+    # and a relative path
+    assert dps_root.match_file(Path("bar"))
+
+    # Path in subdir should also match the relative path
+    assert dps_root.match_file(Path("subdir/baz"))
+
+    # But path in subdir should not match an absolute rule from parent dir.
+    assert not dps_root.match_file(Path("subdir/bar"))
+
+    # Path in subdir should match absolute rule from same dir
+    assert dps_subdir.match_file(Path("subdir/bar"))

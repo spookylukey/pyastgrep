@@ -80,6 +80,15 @@ def test_search_files(capsys):
     )
 
 
+def test_search_subdir(capsys):
+    assert_output(
+        capsys,
+        [".//Name", "subdir"],
+        contains="return an_arg",
+        does_not_contain="return another_arg",
+    )
+
+
 def test_xml_output(capsys):
     assert_output(
         capsys,
