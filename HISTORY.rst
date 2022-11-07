@@ -1,4 +1,4 @@
-Version 0.5 - unreleased
+Version 0.5 - 2022-11-07
 ------------------------
 
 * Fixed bug with XPath expression that don’t select XML nodes. See https://github.com/hchasestevens/astpath/issues/20
