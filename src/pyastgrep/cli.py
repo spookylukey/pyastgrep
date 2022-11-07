@@ -85,7 +85,7 @@ NO_MATCH_FOUND = 1
 ERROR = 2
 
 
-def main(sys_args: list[str] | None = None, stdin: BinaryIO = None) -> int:
+def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> int:
     """Entrypoint for CLI."""
     args = parser.parse_args(args=sys_args)
 

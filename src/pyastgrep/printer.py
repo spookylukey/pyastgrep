@@ -13,8 +13,8 @@ def print_results(
     print_ast: bool = False,
     before_context: int = 0,
     after_context: int = 0,
-    stdout: TextIO = None,
-    stderr: TextIO = None,
+    stdout: TextIO | None = None,
+    stderr: TextIO | None = None,
     quiet: bool = False,
 ) -> tuple[int, int]:
     if print_ast:

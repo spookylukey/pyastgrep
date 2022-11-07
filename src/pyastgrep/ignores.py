@@ -18,7 +18,7 @@ class DirWalker:
         self,
         *,
         glob: str,
-        pathspecs: list[PathSpec] = None,
+        pathspecs: list[PathSpec] | None = None,
         init_global_pathspecs: bool = True,
         start_directory: Path | None = None,
         working_dir: Path | None = None,
