@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,19 +10,19 @@ from .ignores import DirWalker
 
 @dataclass
 class MissingPath:
-    path: str
+    path: Path
 
 
-def get_files_to_search(paths: Sequence[str | BinaryIO]) -> Generator[Path | BinaryIO | MissingPath, None, None]:
+def get_files_to_search(paths: Sequence[Path | BinaryIO]) -> Generator[Path | BinaryIO | MissingPath, None, None]:
     walker = DirWalker(glob="*.py")
     for path in paths:
-        if isinstance(path, str):
-            if not os.path.exists(path):
+        if isinstance(path, Path):
+            if not path.exists():
                 yield MissingPath(path)
-            elif os.path.isfile(path):
-                yield Path(path)
+            elif path.is_file():
+                yield path
             else:
-                yield from walker.for_dir(Path(path)).walk()
+                yield from walker.for_dir(path).walk()
         else:
             # BinaryIO
             yield path

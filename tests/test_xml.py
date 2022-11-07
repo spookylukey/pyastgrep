@@ -1,9 +1,9 @@
-import os.path
 import sys
+from pathlib import Path
 
 from tests.utils import run_print
 
-DIR = os.path.dirname(__file__) + "/examples/test_xml"
+DIR = Path(__file__).parent / "examples" / "test_xml"
 
 
 def test_literals():

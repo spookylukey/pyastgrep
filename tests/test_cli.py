@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import io
-import os
-import os.path
 import re
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
 from pyastgrep.cli import main
 from tests.utils import chdir
 
-DIR = os.path.dirname(__file__) + "/examples/test_cli"
+DIR = Path(__file__).parent / "examples" / "test_cli"
 
 
 def assert_output(

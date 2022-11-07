@@ -1,9 +1,9 @@
 import io
-import os.path
+from pathlib import Path
 
 from tests.utils import run_print
 
-DIR = os.path.dirname(__file__) + "/examples/test_printing"
+DIR = Path(__file__).parent / "examples" / "test_printing"
 
 
 def test_before_context():

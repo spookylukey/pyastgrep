@@ -38,7 +38,7 @@ def test_default_ignores():
     ]
 
     with chdir(DIR):
-        files = list(get_files_to_search(["."]))
+        files = list(get_files_to_search([Path(".")]))
 
     for p in FOUND:
         assert Path(p) in files
@@ -54,7 +54,7 @@ def test_default_ignores():
     # files as we walk sub directories
 
     with chdir(REPO_ROOT):
-        files2 = list(get_files_to_search(["."]))
+        files2 = list(get_files_to_search([Path(".")]))
 
     for p in FOUND:
         assert (DIR_FROM_ROOT / Path(p)) in files2
@@ -71,7 +71,7 @@ def test_override_on_cli():
     Directories specified on command line should always be searched.
     """
     with chdir(DIR):
-        files = list(get_files_to_search(["node_modules"]))
+        files = list(get_files_to_search([Path("node_modules")]))
 
     for p in ["node_modules/subdir/should_be_ignored.py", "node_modules/should_be_ignored.py"]:
         assert Path(p) in files

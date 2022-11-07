@@ -73,7 +73,7 @@ def get_query_func(*, xpath2: bool) -> Callable[[_Element, str], Iterable[_Eleme
 
 
 def search_python_files(
-    paths: Sequence[str | BinaryIO],
+    paths: Sequence[Path | BinaryIO],
     expression: str,
     xpath2: bool = False,
 ) -> Generator[Match | MissingPath | ReadError | NonElementReturned, None, None]:
