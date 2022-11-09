@@ -148,10 +148,36 @@ Classes whose name matches a regular expression:
    $ pyastgrep ".//ClassDef[re:match('M.*', @name)]"
 
 
-This uses the Python `re.match
+The above uses the Python `re.match
 <https://docs.python.org/3/library/re.html#re.match>`_ method. You can also use
 ``re:search`` to use the Python `re.search
 <https://docs.python.org/3/library/re.html#re.search>`_ method.
+
+Case-insensitive match of names on the left hand side of an assignment
+containing a certain string. This can be achieved using the ``lower-case``
+function from XPath2:
+
+.. code:: bash
+
+   $ pyastgrep './/Assign/targets//Name[contains(lower-case(@id), "something")]' --xpath2
+
+
+You can also use regexes, passing the ``i`` (case-insensitive flag) as below, as
+described in the Python `Regular Expression Syntax docs
+<https://docs.python.org/3/library/re.html#regular-expression-syntax>`_
+
+.. code:: bash
+
+   $ pyastgrep './/Assign/targets//Name[re:search("(?i)something", @id)]'
+
+
+Assignments to the name ``foo``, including type annotated assignments, which
+uses ``AnnAssign``, and tuple unpacking assignments (while avoiding things like
+``foo.bar = ...``). Note the use of the ``|`` operator to do a union.
+
+.. code:: bash
+
+   $ pyastgrep '(.//AnnAssign/target|.//Assign/targets|.//Assign/targets/Tuple/elts)/Name[@id="foo"]'
 
 Docstrings of functions/methods whose value contains “hello”:
 
@@ -180,10 +206,49 @@ if that makes sense.
 Tips
 ----
 
+Absolute paths
+~~~~~~~~~~~~~~
 To get pyastgrep to print absolute paths in results, pass the current absolute
 path as the directory to search::
 
   pyastgrep "..." $(pwd)
+
+
+Debugging XPath expressions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the ``--xml`` option to see the XML for matches. If you need to see more
+context, you can use things like the ``parent`` or ``ancestor`` selector. For
+example, you might do the following but get back more results than you want:
+
+.. code:: bash
+
+   $ pyastgrep './/Assign/targets//Name[@id="foo"]
+   example.py:1:1:foo = 1
+   example.py:2:2:(foo, bar) = (3, 4)
+   example.py:3:1:foo.bar = 2
+
+Here you might be interested in the first two results, which both assign to
+the name ``foo``, but not the last one since it does not. You can get the XML for the
+whole matching assignment expressions like this:
+
+.. code:: bash
+
+   $ pyastgrep './/Assign/targets//Name[@id="foo"]/ancestor::Assign' --xml
+   example.py:1:1:foo = 1
+   <Assign lineno="1" col_offset="0">
+     <targets>
+       <Name lineno="1" col_offset="0" type="str" id="foo">
+         <ctx>
+           <Store/>
+         </ctx>
+       </Name>
+     </targets>
+     <value>
+       <Constant lineno="1" col_offset="6" type="int" value="1"/>
+     </value>
+   </Assign>
+   ...
 
 Limitations
 -----------
