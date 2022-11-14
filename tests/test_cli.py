@@ -176,3 +176,29 @@ def test_stdin_bytes():
     # Popen stuff correct
     result = subprocess.run("echo 'x = 1' | pyastgrep --xml './*/*' -", shell=True, capture_output=True)
     assert result.stdout.startswith(b"<stdin>:1:1:x = 1\n<Assign")
+
+
+def test_css_select(capsys):
+    assert_output(
+        capsys,
+        ["--css", "For > target > Name", "-"],
+        stdin="""
+for item in items:
+    pass
+for idx, x in enumerate(items):
+    pass
+""".strip(),
+        equals="<stdin>:1:5:for item in items:\n",
+    )
+
+
+def test_css_select_error(capsys):
+    assert_output(
+        capsys,
+        ["--css", ".//For/Name", "-"],
+        stdin="""
+for item in items:
+    pass
+""".strip(),
+        error_equals="Invalid CSS selector: .//For/Name\n",
+    )

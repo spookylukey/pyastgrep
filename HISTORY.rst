@@ -1,3 +1,8 @@
+Version 0.8 - 2022-11-14
+------------------------
+
+* Added ``--css`` option to support CSS selectors instead of XPath.
+
 Version 0.7 - 2022-11-07
 ------------------------
 
