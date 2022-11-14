@@ -64,8 +64,13 @@ parser.add_argument(
     default=0,
 )
 parser.add_argument(
+    "--css",
+    help="interpret expression as a CSS selector",
+    action="store_true",
+)
+parser.add_argument(
     "--xpath2",
-    help="Use XPath 2.0 functions and selectors. This currently makes matching significantly slower, "
+    help="use XPath 2.0 functions and selectors. This currently makes matching significantly slower, "
     "and re:match and re:search functions are not supported",
     action="store_true",
     default=False,
@@ -107,11 +112,21 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
     else:
         paths = [stdin if p == "-" else Path(p) for p in args.path]
 
+    expr = args.expr
+    if args.css:
+        import cssselect
+
+        try:
+            expr = cssselect.GenericTranslator().css_to_xpath(expr, prefix=".//")
+        except cssselect.SelectorError:
+            print(f"Invalid CSS selector: {expr}", file=sys.stderr)
+            return ERROR
+
     try:
         matches, errors = print_results(
             search_python_files(
                 paths,
-                args.expr,
+                expr,
                 xpath2=args.xpath2,
             ),
             print_xml=args.xml,
@@ -121,7 +136,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
             after_context=after_context,
         )
     except XPathEvalError:
-        print(f"Invalid XPath expression: {args.expr}", file=sys.stderr)
+        print(f"Invalid XPath expression: {expr}", file=sys.stderr)
         return ERROR
     # Match ripgrep:
     if errors and not args.quiet:
