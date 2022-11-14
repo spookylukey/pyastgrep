@@ -49,7 +49,7 @@ class NonElementReturned(ValueError):
 
 def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] | None = None) -> Position | None:
     if not hasattr(element, "xpath"):
-        # Mostly like an _ElementUnicodeResult, the result of a query that terminated in
+        # Most likely an _ElementUnicodeResult, the result of a query that terminated in
         # an attribute rather than a node. We have no way of getting from here to
         # something representing an AST node.
         raise NonElementReturned(element)
