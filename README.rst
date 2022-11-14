@@ -108,20 +108,29 @@ at the bottom), but the examples below should get you started.
 Examples
 --------
 
-Find all usages of a function called ``open``:
+Usages of a function called ``open``:
 
 .. code:: bash
 
-   $ pyastgrep ".//Call/func/Name[@id='open']"
+   $ pyastgrep './/Call/func/Name[@id="open"]'
    src/pyastgrep/search.py:88:18:            with open(path) as f:
 
-Find all literal numbers (Python 3.8+):
+Literal numbers (Python 3.8+):
 
 .. code:: bash
 
    $ pyastgrep './/Constant[@type="int" or @type="float"]'
    tests/examples/test_xml/everything.py:5:20:    assigned_int = 123
    tests/examples/test_xml/everything.py:6:22:    assigned_float = 3.14
+
+Function calls where:
+
+* the function is named ``open``:
+* the second positional argument is a string literal containing the character ``r``:
+
+.. code:: bash
+
+   pyastgrep './/Call[./func/Name[@id="open"]][./args/Constant[position()=1][contains(@value, "r")]]'
 
 Names longer than 42 characters:
 
@@ -172,7 +181,7 @@ described in the Python `Regular Expression Syntax docs
 
 
 Assignments to the name ``foo``, including type annotated assignments, which
-uses ``AnnAssign``, and tuple unpacking assignments (while avoiding things like
+use ``AnnAssign``, and tuple unpacking assignments (while avoiding things like
 ``foo.bar = ...``). Note the use of the ``|`` operator to do a union.
 
 .. code:: bash
@@ -190,6 +199,24 @@ For-loop variables called ``i`` or ``j`` (including those created by tuple unpac
 .. code:: bash
 
    $ pyastgrep './/For/target//Name[@id="i" or @id="j"]'
+
+
+Method calls: These are actually “calls” on objects that are attributes of other
+objects. This will match the top-level object:
+
+.. code:: bash
+
+   $ pyastgrep './/Call/func/Attribute'
+
+
+The following will match individual positional arguments to a method call named
+``encode``, where the arguments are literal strings or numbers. Note the use of
+``Call[…]`` to match “Call nodes that have descendants that match …”, rather
+than matching those descendant nodes themselves.
+
+.. code:: bash
+
+   $ pyastgrep './/Call[./func/Attribute[@attr="encode"]]/args/Constant'
 
 Ignoring files
 --------------
@@ -275,6 +302,16 @@ whole matching assignment expressions like this:
      </value>
    </Assign>
    ...
+
+
+You could also go the other way and change the XPath expression to match on the
+parent ``Assign`` node — this matches “all ``Assign`` nodes that are parents of
+a ``target`` node that is a parent of a ``Name`` node with attribute ``id``
+equal to ``"foo"``:
+
+.. code:: bash
+
+   $ pyastgrep './/Assign[./targets//Name[@id="foo"]]' --xml
 
 Limitations
 -----------
