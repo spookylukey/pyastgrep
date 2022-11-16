@@ -131,11 +131,17 @@ Literal numbers (Python 3.8+):
 Function calls where:
 
 * the function is named ``open``:
-* the second positional argument is a string literal containing the character ``r``:
+* the second positional argument is a string literal containing the character ``b``:
 
 .. code:: bash
 
-   pyastgrep './/Call[./func/Name[@id="open"]][./args/Constant[position()=1][contains(@value, "r")]]'
+   pyastgrep './/Call[./func/Name[@id="open"]][./args/Constant[position()=1][contains(@value, "b")]]'
+
+Usages of ``open`` that are **not** in a ``with`` item expression:
+
+.. code:: bash
+
+   pyastgrep './/Call[not(ancestor::withitem)]/func/Name[@id="open"]'
 
 Names longer than 42 characters:
 
@@ -214,10 +220,10 @@ objects. This will match the top-level object:
    $ pyastgrep './/Call/func/Attribute'
 
 
-The following will match individual positional arguments to a method call named
-``encode``, where the arguments are literal strings or numbers. Note the use of
-``Call[…]`` to match “Call nodes that have descendants that match …”, rather
-than matching those descendant nodes themselves.
+Individual positional arguments to a method call named ``encode``, where the
+arguments are literal strings or numbers. Note the use of ``Call[…]`` to match
+“Call nodes that have descendants that match …”, rather than matching those
+descendant nodes themselves.
 
 .. code:: bash
 
