@@ -202,3 +202,41 @@ for item in items:
 """.strip(),
         error_equals="Invalid CSS selector: .//For/Name\n",
     )
+
+
+@pytest.mark.skipif(sys.version_info < (3, 8), reason="Python 3.7 has different output")
+def test_pyastdump_stdin():
+    result = subprocess.run("echo 'x = 1' | pyastdump -", shell=True, capture_output=True)
+    assert result.returncode == 0
+    assert result.stderr == b""
+    assert result.stdout == (
+        b"<Module>\n"
+        b"  <body>\n"
+        b'    <Assign lineno="1" col_offset="0">\n'
+        b"      <targets>\n"
+        b'        <Name lineno="1" col_offset="0" type="str" id="x">\n'
+        b"          <ctx>\n"
+        b"            <Store/>\n"
+        b"          </ctx>\n"
+        b"        </Name>\n"
+        b"      </targets>\n"
+        b"      <value>\n"
+        b'        <Constant lineno="1" col_offset="4" type="int" value="1"/>\n'
+        b"      </value>\n"
+        b"    </Assign>\n"
+        b"  </body>\n"
+        b"  <type_ignores/>\n"
+        b"</Module>\n"
+    )
+
+
+def test_pyastdump_syntax_error():
+    result = subprocess.run("echo 'x =' | pyastdump -", shell=True, capture_output=True)
+    assert result.returncode != 0
+    assert b"SyntaxError" in result.stderr
+
+
+def test_pyastdump_read_error():
+    result = subprocess.run("pyastdump missing", shell=True, capture_output=True)
+    assert result.returncode != 0
+    assert b"missing" in result.stderr
