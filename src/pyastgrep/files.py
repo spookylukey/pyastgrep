@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import os
 import re
 from dataclasses import dataclass
@@ -54,3 +55,12 @@ def get_encoding(python_file_bytes: bytes) -> str:
         else:
             current_idx = linebreak_idx + 1
     return "utf-8"
+
+
+def parse_python_file(contents: bytes, filename: str | Path) -> tuple[str, ast.AST]:
+    parsed_ast: ast.AST = ast.parse(contents, str(filename))
+    # ast.parse does it's own encoding detection, which we have to replicate
+    # here since we can't assume utf-8
+    encoding = get_encoding(contents)
+    str_contents = contents.decode(encoding)
+    return str_contents, parsed_ast

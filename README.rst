@@ -47,10 +47,38 @@ and how that is mapped to XML. Some methods for doing that are below:
 1. Use `Python AST Explorer <https://python-ast-explorer.com/>`_ to play around
    with what AST looks like.
 
-2. Dump out the AST and/or XML structure of the top-level statements in a Python file. The
-   top-level XML elements are ``<Module><body>``, and don’t correspond to actual
-   source lines. To get the statements within the body, you can use an XPath
-   expression ``/Module/body/*`` or ``./*/*``:
+2. Dump out the AST and/or XML structure of the top-level statements in a Python
+   file. The easiest way to do this is to use the provided ``pyastdump``
+   command, passing in either a Python filename, ``pyastdump yourfile.py``, or
+   piping in Python fragments as below:
+
+   .. code:: bash
+
+      $ echo 'x = 1' | pyastdump -
+      <Module>
+        <body>
+          <Assign lineno="1" col_offset="0">
+            <targets>
+              <Name lineno="1" col_offset="0" type="str" id="x">
+                <ctx>
+                  <Store/>
+                </ctx>
+              </Name>
+            </targets>
+            <value>
+              <Constant lineno="1" col_offset="4" type="int" value="1"/>
+            </value>
+          </Assign>
+        </body>
+        <type_ignores/>
+      </Module>
+
+
+   You can also use the ``pyastgrep`` command, but since the top-level XML
+   elements are ``<Module><body>``, and don’t correspond to actual source lines,
+   you’ll need to use an XPath expression ``./*/*`` to get a match for each
+   statement within the body, and pass ``--xml`` and/or ``--ast`` to dump the
+   XML/AST structure:
 
    .. code:: bash
 
@@ -63,7 +91,6 @@ and how that is mapped to XML. Some methods for doing that are below:
           end_col_offset=9,
           names=[alias(lineno=1, col_offset=7, end_lineno=1, end_col_offset=9, name='os', asname=None)],
       )
-      ...
       <Import lineno="1" col_offset="0">
         <names>
           <alias lineno="1" col_offset="7" type="str" name="os"/>
@@ -79,28 +106,6 @@ stable across Python versions, so the XML is not stable either. Normally changes
 in the AST correspond to new syntax that is added to Python, but in some cases a
 new Python version will make significant changes made to the AST generated for
 the same code.
-
-You can also pipe specific Python fragments using ``-`` to specify stdin as the
-input file:
-
-.. code:: bash
-
-   $ echo 'a + b' | pyastgrep --xml './*/*' -
-   <stdin>:1:1:a + b
-   <Expr lineno="1" col_offset="0">
-     <value>
-       <BinOp lineno="1" col_offset="0">
-         <left>
-           <Name lineno="1" col_offset="0" type="str" id="a">
-             <ctx>
-               <Load/>
-             </ctx>
-           </Name>
-         </left>
-         <op>
-           <Add/>
-         </op>
-     ...
 
 You’ll also need some understanding of how to write XPath expressions (see links
 at the bottom), but the examples below should get you started.

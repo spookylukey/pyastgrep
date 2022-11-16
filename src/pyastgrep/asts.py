@@ -29,13 +29,15 @@ def _strip_docstring(body: list[ast.AST]) -> list[ast.AST]:
     return body
 
 
-def convert_to_xml(
+def ast_to_xml(
     ast_node: ast.AST,
     node_mappings: dict[_Element, ast.AST],
     *,
     omit_docstrings: bool = False,
 ) -> _Element:
-    """Convert supplied AST node to XML."""
+    """Convert supplied AST node to XML.
+    Mappings from XML back to AST nodes will be recorded in node_mappings
+    """
     possible_docstring = isinstance(ast_node, (ast.FunctionDef, ast.ClassDef, ast.Module))
 
     xml_node = etree.Element(ast_node.__class__.__name__)
@@ -51,7 +53,7 @@ def convert_to_xml(
         if isinstance(field_value, ast.AST):
             field = etree.SubElement(xml_node, field_name)
             field.append(
-                convert_to_xml(
+                ast_to_xml(
                     field_value,
                     node_mappings,
                     omit_docstrings=omit_docstrings,
@@ -66,7 +68,7 @@ def convert_to_xml(
             for item in field_value:
                 if isinstance(item, ast.AST):
                     field.append(
-                        convert_to_xml(
+                        ast_to_xml(
                             item,
                             node_mappings,
                             omit_docstrings=omit_docstrings,

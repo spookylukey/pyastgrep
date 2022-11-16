@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, BinaryIO, Callable, Generator, Iterable, Seque
 from lxml.etree import _Element
 
 from . import xml
-from .asts import convert_to_xml
-from .files import MissingPath, get_encoding, get_files_to_search
+from .asts import ast_to_xml
+from .files import MissingPath, get_files_to_search, parse_python_file
 
 if TYPE_CHECKING:
     from typing import Literal
@@ -92,8 +92,7 @@ def search_python_files(
         elif isinstance(path, Path):
             source = path
             try:
-                with open(path, "rb") as f:
-                    contents = f.read()
+                contents = path.read_bytes()
             except OSError as ex:
                 yield ReadError(str(path), ex)
                 continue
@@ -102,14 +101,13 @@ def search_python_files(
             contents = path.read()
 
         try:
-            parsed_ast: ast.AST = ast.parse(contents, str(source))
+            str_contents, parsed_ast = parse_python_file(contents, source)
         except SyntaxError as ex:
             yield ReadError(str(source), ex)
             continue
 
-        encoding = get_encoding(contents)
-        file_lines = contents.decode(encoding).splitlines()
-        xml_ast = convert_to_xml(
+        file_lines = str_contents.splitlines()
+        xml_ast = ast_to_xml(
             parsed_ast,
             node_mappings,
         )

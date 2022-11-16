@@ -1,3 +1,8 @@
+Version 0.9 - 2022-11-16
+------------------------
+
+* Added ``pyastdump`` command to more easily see the XML structure.
+
 Version 0.8 - 2022-11-14
 ------------------------
 
