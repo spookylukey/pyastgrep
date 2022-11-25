@@ -1,3 +1,8 @@
+Version 0.10 - 2022-11-25
+-------------------------
+
+* Automatic dedenting of code from stdin
+
 Version 0.9 - 2022-11-16
 ------------------------
 

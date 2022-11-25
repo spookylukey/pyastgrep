@@ -57,10 +57,43 @@ def get_encoding(python_file_bytes: bytes) -> str:
     return "utf-8"
 
 
-def parse_python_file(contents: bytes, filename: str | Path) -> tuple[str, ast.AST]:
+def parse_python_file(contents: bytes, filename: str | Path, *, auto_dedent: bool) -> tuple[str, ast.AST]:
+    if auto_dedent:
+        contents = auto_dedent_code(contents)
+
     parsed_ast: ast.AST = ast.parse(contents, str(filename))
     # ast.parse does it's own encoding detection, which we have to replicate
     # here since we can't assume utf-8
     encoding = get_encoding(contents)
     str_contents = contents.decode(encoding)
     return str_contents, parsed_ast
+
+
+def auto_dedent_code(python_code: bytes) -> bytes:
+    # Can't use textwrap.dedent, it only works on str,
+
+    # Plus we can have a simpler algo:
+    # - optimizing for the case where this is no whitespace prefix
+    # - bailing out if the first whitespace prefix is
+    #   longer than others, because this will be invalid Python
+    #   code anyway.
+
+    # Find whitespace prefix of first non-empty line
+    m = re.match(rb"(^( +)\S|^\s*\n( +)\S)", python_code, re.MULTILINE)
+    if not m:
+        return python_code
+
+    groups = m.groups()
+    # One of the groups will be `None`
+    whitespace_prefix = groups[1] or groups[2]
+    strip_amount = len(whitespace_prefix)
+    new_lines = []
+    for line in python_code.split(b"\n"):
+        to_strip = line[0:strip_amount]
+        # If not all whitespace, we've made a mistake
+        # and the first line indent is not a common indent.
+        # (this will be invalid Python code anyway)
+        if to_strip.strip() != b"":
+            return python_code
+        new_lines.append(line[strip_amount:])
+    return b"\n".join(new_lines)

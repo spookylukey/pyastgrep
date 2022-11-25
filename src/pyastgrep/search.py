@@ -86,6 +86,7 @@ def search_python_files(
     for path in get_files_to_search(paths):
         node_mappings: dict[_Element, ast.AST] = {}
         source: Pathlike
+        auto_dedent = False
         if isinstance(path, MissingPath):
             yield path
             continue
@@ -99,9 +100,10 @@ def search_python_files(
         else:
             source = "<stdin>"
             contents = path.read()
+            auto_dedent = True
 
         try:
-            str_contents, parsed_ast = parse_python_file(contents, source)
+            str_contents, parsed_ast = parse_python_file(contents, source, auto_dedent=auto_dedent)
         except SyntaxError as ex:
             yield ReadError(str(source), ex)
             continue

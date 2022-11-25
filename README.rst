@@ -73,6 +73,8 @@ and how that is mapped to XML. Some methods for doing that are below:
         <type_ignores/>
       </Module>
 
+   (When piping input in this way, code will be automatically dedented, making
+   this easier to do from partial Python snippets.)
 
    You can also use the ``pyastgrep`` command, but since the top-level XML
    elements are ``<Module><body>``, and don’t correspond to actual source lines,

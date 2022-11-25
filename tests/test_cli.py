@@ -240,3 +240,9 @@ def test_pyastdump_read_error():
     result = subprocess.run("pyastdump missing", shell=True, capture_output=True)
     assert result.returncode != 0
     assert b"missing" in result.stderr
+
+
+def test_pyastdump_remove_indent():
+    result = subprocess.run("echo '    x = 1\n    y = 2' | pyastdump -", shell=True, capture_output=True)
+    assert result.returncode == 0
+    assert b"indent" not in result.stderr
