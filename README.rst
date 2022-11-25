@@ -18,6 +18,8 @@ of grepping for string matches.
 The interface and behaviour is designed to match grep and ripgrep as far as it
 makes sense to do so.
 
+.. contents:: Contents
+
 
 Installation
 ------------
@@ -231,6 +233,17 @@ descendant nodes themselves.
 
    $ pyastgrep './/Call[./func/Attribute[@attr="encode"]]/args/Constant'
 
+
+For a Django code base, find all ``.filter`` and ``.exclude`` method calls, and
+all ``Q`` object calls, which have a keyword argument where the name contains
+the string ``"user"``, for finding ORM calls like
+``.filter(user__id__in=...)`` or ``Q(thing__user=...)``:
+
+.. code:: bash
+
+   pyastgrep '(.//Call[./func/Attribute[@attr="filter" or @attr="exclude"]] | .//Call[./func/Name[@id="Q"]]) [./keywords/keyword[contains(@arg, "user")]]'
+
+
 Ignoring files
 --------------
 
@@ -351,6 +364,34 @@ Use as a library
 pyastgrep is structured internally to make it easy to use a library as well as
 a CLI. However, while we will try not to break things without good reason, at this
 point we are not documenting or guaranteeing API stability for these functions.
+
+Editor integration
+------------------
+
+Emacs
+~~~~~
+
+pyastgrep works very well with ``compilation-mode`` and wrappers like
+``projectile-compile-project`` from `Projectile
+<https://docs.projectile.mx/projectile/usage.html#basic-usage>`_. We recommend
+setting up a keyboard shortcut for ``next-error`` to enable you to step through
+results easily.
+
+Visual Studio Code
+~~~~~~~~~~~~~~~~~~
+
+Run pyastgrep from a terminal and results will be hyperlinked automatically.
+
+PyCharm
+~~~~~~~
+
+Run pyastgrep from a terminal and results will be hyperlinked automatically.
+
+Others
+~~~~~~
+
+Contributions to this section gladly accepted!
+
 
 
 Contributing
