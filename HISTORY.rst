@@ -1,3 +1,8 @@
+Version 0.11 - unreleased
+-------------------------
+
+* In recursive filesystem walk, ignore symlinks (as per ripgrep) instead of crashing
+
 Version 0.10 - 2022-11-25
 -------------------------
 

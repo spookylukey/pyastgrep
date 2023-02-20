@@ -92,6 +92,10 @@ class DirWalker:
         if self.start_directory is None or self.working_dir is None:
             raise AssertionError("Must use `for_dir` before `walk`")
         for filepath in self.start_directory.glob(self.glob):
+            if filepath.is_symlink():
+                # Follow default behaviour of ripgrep, and avoid issues with
+                # `resolve().relative_to(working_dir)
+                continue
             if filepath.is_file():
                 if any(pathspec.match_file(filepath) for pathspec in self.pathspecs):
                     continue
@@ -100,6 +104,8 @@ class DirWalker:
                 else:
                     yield filepath.resolve().relative_to(self.working_dir)
         for subdir in self.start_directory.iterdir():
+            if subdir.is_symlink():
+                continue
             if subdir.is_dir():
                 if any(pathspec.match_file(subdir) for pathspec in self.pathspecs):
                     continue
