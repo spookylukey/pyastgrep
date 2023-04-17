@@ -1,3 +1,9 @@
+Version 1.0 - 2023-04-17
+------------------------
+
+* Added convenience ``Match.matching_line`` for library usage.
+* Fixed mypy errors.
+
 Version 0.11 - 2023-02-20
 -------------------------
 
