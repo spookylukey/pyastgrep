@@ -87,7 +87,7 @@ def print_results(
         matches += 1
         position = result.position
         line_index = position.lineno - 1
-        line = result.file_lines[line_index]
+        line = result.matching_line
         if quiet:
             break
         # Previous result's 'after' lines

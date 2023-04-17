@@ -30,6 +30,10 @@ class Match:
     position: Position
     ast_node: ast.AST
 
+    @property
+    def matching_line(self) -> str:
+        return self.file_lines[self.position.lineno - 1]
+
 
 @dataclass
 class Position:
@@ -79,6 +83,9 @@ def search_python_files(
 ) -> Generator[Match | MissingPath | ReadError | NonElementReturned, None, None]:
     """
     Perform a recursive search through Python files.
+
+    Paths may include directories, e.g "." for the current directory.
+    .gitignore rules will be applied automatically.
 
     """
     query_func = get_query_func(xpath2=xpath2)
