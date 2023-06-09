@@ -1,10 +1,12 @@
 from pathlib import Path
+from unittest.mock import patch
 
 from pathspec.gitignore import GitIgnoreSpec
 
+import pyastgrep.ignores
 from pyastgrep.files import get_files_to_search
 from pyastgrep.ignores import DirectoryPathSpec, find_gitignore_files
-from tests.utils import chdir
+from tests.utils import chdir, run_print
 
 DIR = Path(__file__).resolve().parent / "examples" / "test_ignores"
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -106,3 +108,12 @@ def test_DirectoryPathSpec():
 
     # Path in subdir should match absolute rule from same dir
     assert dps_subdir.match_file(Path("subdir/bar"))
+
+
+def test_no_global_git_ignores():
+    # Check what happens if return of get_global_gitignore is a missing file
+    with patch("pyastgrep.ignores.get_global_gitignore", lambda: Path("/non/existent/.gitignore")):
+        assert pyastgrep.ignores.get_global_gitignore() == Path("/non/existent/.gitignore")
+        # We should not crash or print any output
+        result = run_print(Path("."), "Name")
+        assert not result.stderr

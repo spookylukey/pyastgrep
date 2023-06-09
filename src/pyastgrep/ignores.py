@@ -79,7 +79,7 @@ class DirWalker:
             pathspecs = []
         if init_global_pathspecs:
             global_gitignore = get_global_gitignore()
-            if global_gitignore:
+            if global_gitignore and global_gitignore.exists():
                 pathspecs.append(pathspec_for_gitignore(global_gitignore, is_global_gitignore=True))
             # POSIX hidden files:
             pathspecs.append(PathSpec([GitWildMatchPattern(".*")]))

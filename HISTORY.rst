@@ -1,3 +1,8 @@
+Version 1.1 - 2023-06-09
+------------------------
+
+* Fixed crasher when global ~/.gitignore does not exist
+
 Version 1.0 - 2023-04-17
 ------------------------
 
