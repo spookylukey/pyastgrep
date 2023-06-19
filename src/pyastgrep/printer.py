@@ -70,7 +70,7 @@ def print_results(
                     )
                 )
 
-    def print_header(path: Pathlike, line_index: int) -> None:
+    def maybe_print_header(path: Pathlike, line_index: int) -> None:
         if heading and (path, line_index - 1) not in printed_context_lines:
             # Gap between results, for all but very first
             if matches > 1:
@@ -90,7 +90,7 @@ def print_results(
                 or line_index
                 < before_result.position.lineno - before_context - 1  # Before the context for current result => print
             ):
-                print_header(path, line_index)
+                maybe_print_header(path, line_index)
                 print(to_print, file=stdout)
                 printed_context_lines.add((path, line_index))
         queued_context_lines[:] = []
@@ -123,7 +123,7 @@ def print_results(
         flush_context_lines()
 
         # The actual result
-        print_header(result.path, line_index)
+        maybe_print_header(result.path, line_index)
         print(format_match_line(result), file=stdout)
         printed_context_lines.add((result.path, line_index))
 
