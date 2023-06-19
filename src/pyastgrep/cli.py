@@ -101,8 +101,6 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
 
     if stdin is None:
         # Need to use .buffer here, to get bytes version, not text
-        # mypy thinks type is `typing.BinaryIO`, which is not a runtime thing
-        # we can `isinstance` against, so we have to cast.
         stdin = sys.stdin.buffer
 
     paths: list[Path | BinaryIO]
