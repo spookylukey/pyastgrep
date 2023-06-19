@@ -43,6 +43,7 @@ def run_print(
     xpath2: bool = False,
     print_xml: bool = False,
     context: StaticContext = StaticContext(before=0, after=0),
+    heading=False,
 ) -> Output:
     # As much as possible, we're avoiding capsys or other techniques that
     # capture stdin/out, because they interacts badly with trying to do REPL
@@ -62,5 +63,6 @@ def run_print(
             stderr=stderr,
             print_xml=print_xml,
             context=context,
+            heading=heading,
         )
     return Output(stdout=stdout.getvalue(), stderr=stderr.getvalue(), retval=retval)

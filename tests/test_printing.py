@@ -72,3 +72,56 @@ def test_encoding():
     file_data = b'# -*- coding: windows-1252 -*-\n\nX = "\x85"\n'
     output = run_print(DIR, './/Name[@id="X"]', [io.BytesIO(file_data)]).stdout
     assert output == '<stdin>:3:1:X = "…"\n'
+
+
+def test_heading():
+    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], heading=True).stdout
+    assert (
+        output
+        == """
+# context_example.py:3:
+    a_name = "Peter"
+
+# context_example.py:7:
+    a_name = "Fred"
+""".lstrip()
+    )
+
+
+def test_heading_with_context():
+    # Test edge conditions for grouping
+    output = run_print(
+        DIR, './/Name[@id="a_name"]', ["context_example.py"], heading=True, context=StaticContext(before=2, after=1)
+    ).stdout
+    assert (
+        output
+        == """
+# context_example.py:1:
+# flake8: noqa
+def func():
+    a_name = "Peter"
+    # Comment
+    "random_string"
+    another_var = 1
+    a_name = "Fred"
+    # Final comment
+""".lstrip()
+    )
+
+    output2 = run_print(
+        DIR, './/Name[@id="a_name"]', ["context_example.py"], heading=True, context=StaticContext(before=2, after=0)
+    ).stdout
+    assert (
+        output2
+        == """
+# context_example.py:1:
+# flake8: noqa
+def func():
+    a_name = "Peter"
+
+# context_example.py:5:
+    "random_string"
+    another_var = 1
+    a_name = "Fred"
+""".lstrip()
+    )

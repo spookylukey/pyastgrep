@@ -75,6 +75,12 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
+    "--heading",
+    help="Print the file path and line number as a heading (formatted as a Python comment) above the results.",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
     "expr",
     help="XPath search expression",
 )
@@ -130,6 +136,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
             print_ast=args.ast,
             quiet=args.quiet,
             context=StaticContext(before=before_context, after=after_context),
+            heading=args.heading,
         )
     except XPathEvalError:
         print(f"Invalid XPath expression: {expr}", file=sys.stderr)

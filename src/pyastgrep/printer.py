@@ -22,6 +22,7 @@ def print_results(
     stdout: TextIO | None = None,
     stderr: TextIO | None = None,
     quiet: bool = False,
+    heading: bool = False,
 ) -> tuple[int, int]:
     if print_ast:
         # Don't import unless needed
@@ -50,6 +51,13 @@ def print_results(
     printed_context_lines: set[tuple[Pathlike, int]] = set()
     queued_context_lines: list[tuple[Pathlike, int, str]] = []
 
+    if heading:
+        format_context_line = _format_context_line_heading
+        format_match_line = _format_match_line_heading
+    else:
+        format_context_line = _format_context_line_default
+        format_match_line = _format_match_line_default
+
     def queue_context_lines(result: Match, context_line_indices: list[int]) -> None:
         for context_line_index in context_line_indices:
             if (result.path, context_line_index) not in printed_context_lines:
@@ -58,9 +66,16 @@ def print_results(
                     (
                         result.path,
                         context_line_index,
-                        _format_context_line_default(result, context_line, context_line_index),
+                        format_context_line(result, context_line, context_line_index),
                     )
                 )
+
+    def print_header(path: Pathlike, line_index: int) -> None:
+        if heading and (path, line_index - 1) not in printed_context_lines:
+            # Gap between results, for all but very first
+            if matches > 1:
+                print("", file=stdout)
+            print(_format_header(path, line_index), file=stdout)
 
     def flush_context_lines(*, before_result: Match | None = None) -> None:
         """
@@ -75,6 +90,7 @@ def print_results(
                 or line_index
                 < before_result.position.lineno - before_context - 1  # Before the context for current result => print
             ):
+                print_header(path, line_index)
                 print(to_print, file=stdout)
                 printed_context_lines.add((path, line_index))
         queued_context_lines[:] = []
@@ -103,12 +119,12 @@ def print_results(
         flush_context_lines(before_result=result)
 
         # This result's 'before' lines
-        if before_context:
-            queue_context_lines(result, list(range(max(0, line_index - before_context), line_index)))
-            flush_context_lines()
+        queue_context_lines(result, list(range(max(0, line_index - before_context), line_index)))
+        flush_context_lines()
 
         # The actual result
-        print(_format_match_line_default(result), file=stdout)
+        print_header(result.path, line_index)
+        print(format_match_line(result), file=stdout)
         printed_context_lines.add((result.path, line_index))
 
         if print_ast:
@@ -118,10 +134,9 @@ def print_results(
             print(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"), file=stdout)
 
         # This result's 'after' lines
-        if after_context:
-            queue_context_lines(
-                result, list(range(line_index + 1, min(len(result.file_lines), line_index + after_context + 1)))
-            )
+        queue_context_lines(
+            result, list(range(line_index + 1, min(len(result.file_lines), line_index + after_context + 1)))
+        )
     # Last result
     flush_context_lines()
 
@@ -137,3 +152,20 @@ def _format_context_line_default(result: Match, context_line: str, context_line_
 
 def _format_match_line_default(result: Match) -> str:
     return f"{result.path}:{result.position.lineno}:{result.position.col_offset + 1}:{result.matching_line}"
+
+
+# Formatting for heading mode
+
+
+def _format_context_line_heading(result: Match, context_line: str, context_line_index: int) -> str:
+    return context_line
+
+
+def _format_match_line_heading(result: Match) -> str:
+    return result.matching_line
+
+
+def _format_header(path: Pathlike, context_line_index: int) -> str:
+    # Start with hash like a Python comment, for integration with tools that
+    # consume Python code
+    return f"# {path}:{context_line_index + 1}:"
