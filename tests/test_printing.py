@@ -1,13 +1,14 @@
 import io
 from pathlib import Path
 
+from pyastgrep.printer import StaticContext
 from tests.utils import run_print
 
 DIR = Path(__file__).parent / "examples" / "test_printing"
 
 
 def test_before_context():
-    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], before_context=1).stdout
+    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], context=StaticContext(before=1)).stdout
     assert (
         output
         == """
@@ -20,7 +21,7 @@ context_example.py:7:5:    a_name = "Fred"
 
 
 def test_after_context():
-    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], after_context=1).stdout
+    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], context=StaticContext(after=1)).stdout
     assert (
         output
         == """
@@ -33,7 +34,7 @@ context_example.py-8-    # Final comment
 
 
 def test_overlapping_context():
-    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], before_context=10).stdout
+    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], context=StaticContext(before=10)).stdout
     assert (
         output
         == """
@@ -49,7 +50,7 @@ context_example.py:7:5:    a_name = "Fred"
 
 
 def test_overlapping_context_2():
-    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], after_context=10).stdout
+    output = run_print(DIR, './/Name[@id="a_name"]', ["context_example.py"], context=StaticContext(after=10)).stdout
     assert (
         output
         == """

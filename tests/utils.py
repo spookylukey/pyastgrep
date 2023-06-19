@@ -7,7 +7,7 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-from pyastgrep.printer import print_results
+from pyastgrep.printer import StaticContext, print_results
 from pyastgrep.search import search_python_files
 
 if hasattr(contextlib, "chdir"):
@@ -42,8 +42,7 @@ def run_print(
     paths: list[str | Path | typing.BinaryIO] | None = None,
     xpath2: bool = False,
     print_xml: bool = False,
-    before_context: int = 0,
-    after_context: int = 0,
+    context: StaticContext = StaticContext(before=0, after=0),
 ) -> Output:
     # As much as possible, we're avoiding capsys or other techniques that
     # capture stdin/out, because they interacts badly with trying to do REPL
@@ -62,7 +61,6 @@ def run_print(
             stdout=stdout,
             stderr=stderr,
             print_xml=print_xml,
-            before_context=before_context,
-            after_context=after_context,
+            context=context,
         )
     return Output(stdout=stdout.getvalue(), stderr=stderr.getvalue(), retval=retval)

@@ -16,7 +16,7 @@ from typing import BinaryIO
 from lxml.etree import XPathEvalError
 
 from pyastgrep import __version__
-from pyastgrep.printer import print_results
+from pyastgrep.printer import StaticContext, print_results
 from pyastgrep.search import search_python_files
 
 NAME_AND_VERSION = "pyastgrep " + __version__
@@ -131,8 +131,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
             print_xml=args.xml,
             print_ast=args.ast,
             quiet=args.quiet,
-            before_context=before_context,
-            after_context=after_context,
+            context=StaticContext(before=before_context, after=after_context),
         )
     except XPathEvalError:
         print(f"Invalid XPath expression: {expr}", file=sys.stderr)

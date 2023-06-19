@@ -1,18 +1,24 @@
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass
 from typing import Iterable, TextIO
 
 from . import xml
 from .search import Match, MissingPath, NonElementReturned, Pathlike, ReadError
 
 
+@dataclass(frozen=True)
+class StaticContext:
+    before: int = 0
+    after: int = 0
+
+
 def print_results(
     results: Iterable[Match | MissingPath | ReadError | NonElementReturned],
     print_xml: bool = False,
     print_ast: bool = False,
-    before_context: int = 0,
-    after_context: int = 0,
+    context: StaticContext = StaticContext(before=0, after=0),
     stdout: TextIO | None = None,
     stderr: TextIO | None = None,
     quiet: bool = False,
@@ -39,6 +45,8 @@ def print_results(
     #   rather than waiting (grouping by file would simplify some things)
     # - edge conditions
 
+    before_context = context.before
+    after_context = context.after
     printed_context_lines: set[tuple[Pathlike, int]] = set()
     queued_context_lines: list[tuple[Pathlike, int, str]] = []
 
