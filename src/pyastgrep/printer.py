@@ -54,9 +54,12 @@ def print_results(
         for context_line_index in context_line_indices:
             if (result.path, context_line_index) not in printed_context_lines:
                 context_line = result.file_lines[context_line_index]
-                # Same formatting as ripgrep
                 queued_context_lines.append(
-                    (result.path, context_line_index, f"{result.path}-{context_line_index + 1}-{context_line}")
+                    (
+                        result.path,
+                        context_line_index,
+                        _format_context_line_default(result, context_line, context_line_index),
+                    )
                 )
 
     def flush_context_lines(*, before_result: Match | None = None) -> None:
@@ -93,9 +96,7 @@ def print_results(
             continue
 
         matches += 1
-        position = result.position
-        line_index = position.lineno - 1
-        line = result.matching_line
+        line_index = result.position.lineno - 1
         if quiet:
             break
         # Previous result's 'after' lines
@@ -107,7 +108,7 @@ def print_results(
             flush_context_lines()
 
         # The actual result
-        print(f"{result.path}:{line_index + 1}:{position.col_offset + 1}:{line}", file=stdout)
+        print(_format_match_line_default(result), file=stdout)
         printed_context_lines.add((result.path, line_index))
 
         if print_ast:
@@ -125,3 +126,14 @@ def print_results(
     flush_context_lines()
 
     return (matches, errors)
+
+
+# Same formatting as ripgrep:
+
+
+def _format_context_line_default(result: Match, context_line: str, context_line_index: int) -> str:
+    return f"{result.path}-{context_line_index + 1}-{context_line}"
+
+
+def _format_match_line_default(result: Match) -> str:
+    return f"{result.path}:{result.position.lineno}:{result.position.col_offset + 1}:{result.matching_line}"
