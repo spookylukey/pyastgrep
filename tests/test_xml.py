@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 from tests.utils import run_print
@@ -8,12 +7,8 @@ DIR = Path(__file__).parent / "examples" / "test_xml"
 
 def test_literals():
     # We need a way to distinguish between different literals
-    if sys.version_info < (3, 8):
-        expr_int = ".//Num"
-        expr_string = ".//Str"
-    else:
-        expr_int = './/Constant[@type="int"]'
-        expr_string = './/Constant[@type="str"]'
+    expr_int = './/Constant[@type="int"]'
+    expr_string = './/Constant[@type="str"]'
 
     output_int = run_print(DIR, expr_int, print_xml=True).stdout
     output_string = run_print(DIR, expr_string, print_xml=True).stdout

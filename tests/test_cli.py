@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import io
-import re
 import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -138,9 +136,6 @@ Expr(
     ),
 )
 """
-    if sys.version_info < (3, 8):
-        # Python 3.7 doesn't return end info
-        expected, _ = re.subn(r" *end_(lineno|col_offset)=\d+,\n?", "", expected)
     assert_output(
         capsys,
         ["--ast", "./*/*", "-"],
@@ -204,7 +199,6 @@ for item in items:
     )
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="Python 3.7 has different output")
 def test_pyastdump_stdin():
     result = subprocess.run("echo 'x = 1' | pyastdump -", shell=True, capture_output=True)
     assert result.returncode == 0
