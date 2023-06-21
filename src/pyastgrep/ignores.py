@@ -1,11 +1,29 @@
+"""
+Directory walker, with smart behaviour for ignoring files.
+
+This is based on ripgrep behaviour:
+
+- Automatically respect global and local `.gitignore` files
+- Automatically ignore hidden files
+
+With some known differences/unimplemented features
+
+- doesn't support `.ignore` files
+- ripgrep does not respect `.gitignore` files if the starting directory is outside a git repo
+  https://github.com/BurntSushi/ripgrep/issues/1109 but we do
+- ripgrep considers Windows files with hidden attribute to be hidden, we do not yet.
+"""
 from __future__ import annotations
 
+import logging
 import subprocess
 from pathlib import Path
 from typing import Any, Generator, Union, overload
 
 from pathspec import GitIgnoreSpec, PathSpec
 from pathspec.patterns.gitwildmatch import GitWildMatchPattern
+
+logger = logging.getLogger(__name__)
 
 
 class DirectoryPathSpec:
@@ -36,6 +54,9 @@ class DirectoryPathSpec:
             return False
         else:
             return self.pathspec.match_file(relative)
+
+    def __repr__(self) -> str:
+        return f"<DirectoryPathSpec {self.location!r} {self.pathspec!r}>"
 
 
 PathSpecLike = Union[PathSpec, DirectoryPathSpec]
@@ -149,9 +170,16 @@ class DirWalker:
             if filepath.is_symlink():
                 # Follow default behaviour of ripgrep, and avoid issues with
                 # `resolve().relative_to(working_dir)
+                logger.debug("Ignoring symlink %s", filepath)
                 continue
             if filepath.is_file():
-                if any(pathspec.match_file(filepath) for pathspec in self.pathspecs):
+                pathspec_matched = False
+                for pathspec in self.pathspecs:
+                    if pathspec.match_file(filepath):
+                        pathspec_matched = True
+                        logger.debug("Ignoring path %s because it matches pathspec %s", filepath, pathspec)
+                        break
+                if pathspec_matched:
                     continue
                 if self.absolute_base:
                     yield filepath
@@ -159,9 +187,16 @@ class DirWalker:
                     yield filepath.resolve().relative_to(self.working_dir)
         for subdir in self.start_directory.iterdir():
             if subdir.is_symlink():
+                logger.debug("Ignoring symlink %s", subdir)
                 continue
             if subdir.is_dir():
-                if any(pathspec.match_file(subdir) for pathspec in self.pathspecs):
+                pathspec_matched = False
+                for pathspec in self.pathspecs:
+                    if pathspec.match_file(subdir):
+                        pathspec_matched = True
+                        logger.debug("Ignoring path %s because it matches pathspec %s", subdir, pathspec)
+                        break
+                if pathspec_matched:
                     continue
                 yield from self.for_subdir(subdir).walk()
 

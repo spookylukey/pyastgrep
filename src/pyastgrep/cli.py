@@ -93,6 +93,12 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
+    "--debug",
+    help="Print debugging information, especially for why files are skipped",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
     "expr",
     help="XPath search expression",
 )
@@ -110,6 +116,11 @@ ERROR = 2
 def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> int:
     """Entrypoint for CLI."""
     args = parser.parse_args(args=sys_args)
+
+    if args.debug:
+        import logging
+
+        logging.basicConfig(level=logging.DEBUG)
 
     before_context = args.before_context or args.context
     after_context = args.after_context or args.context
