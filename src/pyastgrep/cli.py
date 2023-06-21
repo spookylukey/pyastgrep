@@ -202,6 +202,8 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
     except XPathEvalError:
         print(f"Invalid XPath expression: {expr}", file=sys.stderr)
         return ERROR
+    except KeyboardInterrupt:
+        sys.exit(1)
     # Match ripgrep:
     if errors and not args.quiet:
         return ERROR

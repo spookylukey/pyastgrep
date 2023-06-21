@@ -9,6 +9,8 @@ Version 1.2 - unreleased
   * ``--no-ignore-vcs``
   * ``--context=statement``
 
+* Handle Ctrl-C cleanly
+
 Version 1.1 - 2023-06-09
 ------------------------
 
