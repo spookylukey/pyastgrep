@@ -7,7 +7,7 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-from pyastgrep.printer import StaticContext, print_results
+from pyastgrep.printer import StatementContext, StaticContext, print_results
 from pyastgrep.search import search_python_files
 
 if hasattr(contextlib, "chdir"):
@@ -42,7 +42,7 @@ def run_print(
     paths: list[str | Path | typing.BinaryIO] | None = None,
     xpath2: bool = False,
     print_xml: bool = False,
-    context: StaticContext = StaticContext(before=0, after=0),
+    context: StaticContext | StatementContext = StaticContext(before=0, after=0),
     heading=False,
 ) -> Output:
     # As much as possible, we're avoiding capsys or other techniques that
@@ -58,6 +58,7 @@ def run_print(
                 [Path(p) if isinstance(p, str) else p for p in paths] if paths else [Path(".")],
                 expr,
                 xpath2=xpath2,
+                add_ast_parent_nodes=isinstance(context, StatementContext),
             ),
             stdout=stdout,
             stderr=stderr,

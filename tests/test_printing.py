@@ -1,7 +1,7 @@
 import io
 from pathlib import Path
 
-from pyastgrep.printer import StaticContext
+from pyastgrep.printer import StatementContext, StaticContext
 from tests.utils import run_print
 
 DIR = Path(__file__).parent / "examples" / "test_printing"
@@ -124,4 +124,64 @@ def func():
     another_var = 1
     a_name = "Fred"
 """.lstrip()
+    )
+
+
+def test_statement_context_if_body():
+    output = run_print(DIR, './/Name[@id="OTHERNAME"]', ["statements.py"], context=StatementContext()).stdout
+    assert (
+        output
+        == """
+statements.py:3:5:    OTHERNAME
+""".lstrip()
+    )
+
+
+def test_statement_context_if_condition():
+    # MYNAME appears in the condition of an if statement, not the body
+    output2 = run_print(DIR, './/Name[@id="MYNAME"]', ["statements.py"], context=StatementContext()).stdout
+    assert (
+        output2
+        == """
+statements.py:2:4:if MYNAME:
+statements.py-3-    OTHERNAME
+""".lstrip()
+    )
+
+
+def test_statement_context_expr():
+    output = run_print(
+        DIR, './/Constant[@value="123"]', ["statements.py"], heading=True, context=StatementContext()
+    ).stdout
+    assert (
+        output
+        == """
+# statements.py:7:
+function_call(
+    123,
+)
+""".lstrip()
+    )
+
+
+def test_statement_context_with_heading_auto_dedent():
+    output = run_print(DIR, ".//FunctionDef", ["indented.py"], heading=True, context=StatementContext()).stdout
+    assert (
+        output
+        == '''
+# indented.py:5:
+def func(self):
+    """Docstring"""
+'''.lstrip()
+    )
+
+    output2 = run_print(
+        DIR, './/Constant[@type="str"]', ["indented.py"], heading=True, context=StatementContext()
+    ).stdout
+    assert (
+        output2
+        == '''
+# indented.py:6:
+"""Docstring"""
+'''.lstrip()
     )
