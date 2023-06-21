@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import Generator, Union, overload
+from typing import Any, Generator, Union, overload
 
 from pathspec import GitIgnoreSpec, PathSpec
 from pathspec.patterns.gitwildmatch import GitWildMatchPattern
@@ -41,6 +41,15 @@ class DirectoryPathSpec:
 PathSpecLike = Union[PathSpec, DirectoryPathSpec]
 
 
+class _Default:
+    """
+    Sentinel for default values to function/method args
+    """
+
+
+DEFAULT: Any = _Default()
+
+
 @overload
 def add_negative_dir_pattern(pathspec: PathSpec, directory: Path) -> PathSpec:
     pass
@@ -67,7 +76,7 @@ class DirWalker:
         self,
         *,
         glob: str,
-        pathspecs: list[PathSpecLike] | None = None,
+        pathspecs: list[PathSpecLike] = DEFAULT,
         init_global_pathspecs: bool = True,
         start_directory: Path | None = None,
         working_dir: Path | None = None,
@@ -76,7 +85,7 @@ class DirWalker:
     ):
         # DirWalker is immutable outside __init__
         self.glob: str = glob
-        if pathspecs is None:
+        if pathspecs is DEFAULT:
             pathspecs = []
         if init_global_pathspecs:
             global_gitignore = get_global_gitignore()
@@ -87,7 +96,7 @@ class DirWalker:
                 pathspecs.append(PathSpec([GitWildMatchPattern(".*")]))
         self.pathspecs: list[PathSpecLike] = pathspecs
         self.start_directory: Path | None = start_directory
-        self.working_dir = working_dir
+        self.working_dir: Path | None = working_dir
         self.absolute_base: bool = absolute_base
 
     def for_dir(self, directory: Path, working_dir: Path) -> DirWalker:
@@ -107,10 +116,8 @@ class DirWalker:
             # in a subdirectory `.gitignore` which matches the passed in directory.
             pathspecs = [add_negative_dir_pattern(pathspec, directory) for pathspec in pathspecs]
 
-        return DirWalker(
-            glob=self.glob,
+        return self._clone(
             pathspecs=pathspecs,
-            init_global_pathspecs=False,
             start_directory=base_directory,
             working_dir=working_dir,
             absolute_base=directory.is_absolute(),
@@ -130,13 +137,9 @@ class DirWalker:
             pathspec_for_gitignore(ignorepath) for ignorepath in find_gitignore_files(directory, recurse_up=False)
         ]
 
-        return DirWalker(
-            glob=self.glob,
+        return self._clone(
             pathspecs=self.pathspecs + extra_pathspecs,
-            init_global_pathspecs=False,
             start_directory=directory,
-            working_dir=self.working_dir,
-            absolute_base=self.absolute_base,
         )
 
     def walk(self) -> Generator[Path, None, None]:
@@ -161,6 +164,23 @@ class DirWalker:
                 if any(pathspec.match_file(subdir) for pathspec in self.pathspecs):
                     continue
                 yield from self.for_subdir(subdir).walk()
+
+    def _clone(
+        self,
+        *,
+        pathspecs: list[PathSpecLike],
+        start_directory: Path,
+        working_dir: Path = DEFAULT,
+        absolute_base: bool = DEFAULT,
+    ) -> DirWalker:
+        return DirWalker(
+            glob=self.glob,
+            pathspecs=pathspecs,
+            init_global_pathspecs=False,
+            start_directory=start_directory,
+            working_dir=self.working_dir if working_dir is DEFAULT else working_dir,
+            absolute_base=self.absolute_base if absolute_base is DEFAULT else absolute_base,
+        )
 
 
 def pathspec_for_gitignore(gitignore_file: Path, is_global_gitignore: bool = False) -> PathSpec | DirectoryPathSpec:
