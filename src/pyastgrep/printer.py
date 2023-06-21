@@ -7,7 +7,7 @@ from typing import Iterable, TextIO
 from pyastgrep import ast_compat
 
 from . import xml
-from .search import Match, MissingPath, NonElementReturned, Pathlike, ReadError
+from .search import FileFinished, Match, MissingPath, NonElementReturned, Pathlike, ReadError
 
 
 @dataclass(frozen=True)
@@ -21,7 +21,7 @@ class StatementContext:
 
 
 def print_results(
-    results: Iterable[Match | MissingPath | ReadError | NonElementReturned],
+    results: Iterable[Match | MissingPath | ReadError | NonElementReturned | FileFinished],
     print_xml: bool = False,
     print_ast: bool = False,
     context: StaticContext | StatementContext = StaticContext(before=0, after=0),
@@ -120,6 +120,9 @@ def print_results(
         elif isinstance(result, NonElementReturned):
             do_error(f"Error: XPath expression returned a value that is not an AST node: {result.args[0]}")
             continue
+        elif isinstance(result, FileFinished):
+            flush_context_lines()
+            continue
 
         if isinstance(context, StaticContext):
             before_context = context.before
@@ -153,6 +156,8 @@ def print_results(
             print(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"), file=stdout)
 
         # This result's 'after' lines
+        # We cannot print them yet, because if a match is produced that is withing the
+        # lines to be printed, we format it differently to formatting of context lines.
         queue_context_lines(
             result, list(range(line_index + 1, min(len(result.file_lines), line_index + after_context + 1)))
         )

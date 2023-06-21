@@ -51,6 +51,15 @@ class NonElementReturned(ValueError):
     pass
 
 
+@dataclass(frozen=True)
+class FileFinished:
+    """
+    Sentinel used for flushing output
+    """
+
+    path: Pathlike
+
+
 def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] | None = None) -> Position | None:
     if not hasattr(element, "xpath"):
         # Most likely an _ElementUnicodeResult, the result of a query that terminated in
@@ -84,7 +93,7 @@ def search_python_files(
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
     add_ast_parent_nodes: bool = False,
-) -> Generator[Match | MissingPath | ReadError | NonElementReturned, None, None]:
+) -> Generator[Match | MissingPath | ReadError | NonElementReturned | FileFinished, None, None]:
     """
     Perform a recursive search through Python files.
 
@@ -149,3 +158,5 @@ def search_python_files(
                 yield ex
             if position is not None and ast_node is not None:
                 yield Match(source, file_lines, element, position, ast_node)
+
+        yield FileFinished(source)
