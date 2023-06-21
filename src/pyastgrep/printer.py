@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
-from typing import Iterable, TextIO
+from typing import Iterable, Protocol, TextIO
 
 from pyastgrep import ast_compat
 
@@ -18,6 +18,17 @@ class StaticContext:
 
 class StatementContext:
     pass
+
+
+class Formatter(Protocol):
+    def format_header(self, path: Pathlike, context_line_index: int) -> str | None:
+        pass
+
+    def format_context_line(self, result: Match, context_line: str, context_line_index: int) -> str:
+        pass
+
+    def format_match_line(self, result: Match) -> str:
+        pass
 
 
 def print_results(
@@ -41,74 +52,18 @@ def print_results(
     matches = 0
     errors = 0
 
-    # Printing context lines:
-    #
-    # This function is quite complex due to:
-    # - handling before and after context,
-    # - including overlapping context
-    # - handling the fact that a single line may be printed multiple times
-    #   if there is a match on multiple parts of the line.
-    # - ensuring that we print results as soon as we get them,
-    #   rather than waiting (grouping by file would simplify some things)
-    # - edge conditions
-
-    printed_context_lines: set[tuple[Pathlike, int]] = set()
-    queued_context_lines: list[tuple[Pathlike, int, str]] = []
-
+    formatter: Formatter
     if heading:
-        format_context_line = _format_context_line_heading
-        format_match_line = _format_match_line_heading
+        formatter = HeadingFormatter()
     else:
-        format_context_line = _format_context_line_default
-        format_match_line = _format_match_line_default
-
-    def queue_context_lines(result: Match, context_line_indices: list[int]) -> None:
-        for context_line_index in context_line_indices:
-            if (result.path, context_line_index) not in printed_context_lines:
-                context_line = result.file_lines[context_line_index]
-                queued_context_lines.append(
-                    (
-                        result.path,
-                        context_line_index,
-                        format_context_line(result, context_line, context_line_index),
-                    )
-                )
-
-    def maybe_print_header(path: Pathlike, line_index: int) -> None:
-        if heading and (path, line_index - 1) not in printed_context_lines:
-            # Gap between results, for all but very first
-            if matches > 1:
-                print("", file=stdout)
-            print(_format_header(path, line_index), file=stdout)
-
-    def flush_context_lines(
-        *, before_result_path: Pathlike | None = None, before_result_line: int | None = None
-    ) -> None:
-        """
-        Print queued context lines.
-
-        If passed, print only the context lines that come before before_result_path and before_result_line.
-        """
-
-        for path, line_index, to_print in queued_context_lines:
-            if (
-                before_result_path is None
-                or path != before_result_path
-                # from a different file => print
-            ) or (
-                before_result_line is None
-                or line_index < before_result_line
-                # Before the context for current result => print
-            ):
-                maybe_print_header(path, line_index)
-                print(to_print, file=stdout)
-                printed_context_lines.add((path, line_index))
-        queued_context_lines[:] = []
+        formatter = DefaultFormatter()
 
     def do_error(message: str) -> None:
         nonlocal errors
         print(message, file=stderr)
         errors += 1
+
+    context_handler = ContextHandler(config=context, stdout=stdout, formatter=formatter)
 
     for result in results:
         if isinstance(result, MissingPath):
@@ -121,7 +76,7 @@ def print_results(
             do_error(f"Error: XPath expression returned a value that is not an AST node: {result.args[0]}")
             continue
         elif isinstance(result, FileFinished):
-            flush_context_lines()
+            context_handler.flush_context_lines()
             continue
 
         if isinstance(context, StaticContext):
@@ -136,18 +91,17 @@ def print_results(
             continue
 
         # Previous result's 'after' lines
-        flush_context_lines(
-            before_result_path=result.path, before_result_line=result.position.lineno - before_context - 1
+        context_handler.flush_context_lines(
+            before_result_path=result.path,
+            before_result_line=result.position.lineno - before_context - 1,
         )
 
         # This result's 'before' lines
-        queue_context_lines(result, list(range(max(0, line_index - before_context), line_index)))
-        flush_context_lines()
+        context_handler.queue_context_lines(result, list(range(max(0, line_index - before_context), line_index)))
+        context_handler.flush_context_lines()
 
         # The actual result
-        maybe_print_header(result.path, line_index)
-        print(format_match_line(result), file=stdout)
-        printed_context_lines.add((result.path, line_index))
+        context_handler.print_match_line(result, line_index)
 
         if print_ast:
             print(astpretty.pformat(result.ast_node), file=stdout)
@@ -156,43 +110,121 @@ def print_results(
             print(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"), file=stdout)
 
         # This result's 'after' lines
-        # We cannot print them yet, because if a match is produced that is withing the
-        # lines to be printed, we format it differently to formatting of context lines.
-        queue_context_lines(
+        context_handler.queue_context_lines(
             result, list(range(line_index + 1, min(len(result.file_lines), line_index + after_context + 1)))
         )
     # Last result
-    flush_context_lines()
+    context_handler.flush_context_lines()
 
     return (matches, errors)
 
 
-# Same formatting as ripgrep:
+class ContextHandler:
+    # Helper class to manage context lines:
+    #
+    # This is quite complex due to:
+    # - handling before and after context,
+    # - including overlapping context
+    # - handling the fact that a single line may be printed multiple times
+    #   if there is a match on multiple parts of the line.
+    # - ensuring that we print results as soon as we get them,
+    #   rather than waiting (grouping by file would simplify some things)
+    # - A match line is formatted differently from a result line, which
+    #   means we have to wait to print the 'after' lines of a previous result
+    #   to be sure they don't contain a match line.
+    # - edge conditions
+
+    def __init__(self, *, config: StaticContext | StatementContext, stdout: TextIO, formatter: Formatter):
+        # Configuration from outside:
+        self.config = config
+        self.stdout = stdout
+        self.formatter = formatter
+
+        # Internal state this class manages:
+        self.printed_context_lines: set[tuple[Pathlike, int]] = set()
+        self.queued_context_lines: list[tuple[Pathlike, int, str]] = []
+
+    def print_match_line(self, result: Match, line_index: int) -> None:
+        self.maybe_print_header(result.path, line_index)
+        print(self.formatter.format_match_line(result), file=self.stdout)
+        self.printed_context_lines.add((result.path, line_index))
+
+    def maybe_print_header(self, path: Pathlike, line_index: int) -> None:
+        if (path, line_index - 1) not in self.printed_context_lines:
+            header = self.formatter.format_header(path, line_index)
+            if header is not None:
+                print(header, file=self.stdout)
+
+    def queue_context_lines(self, result: Match, context_line_indices: list[int]) -> None:
+        for context_line_index in context_line_indices:
+            if (result.path, context_line_index) not in self.printed_context_lines:
+                context_line = result.file_lines[context_line_index]
+                self.queued_context_lines.append(
+                    (
+                        result.path,
+                        context_line_index,
+                        self.formatter.format_context_line(result, context_line, context_line_index),
+                    )
+                )
+
+    def flush_context_lines(
+        self, *, before_result_path: Pathlike | None = None, before_result_line: int | None = None
+    ) -> None:
+        """
+        Print queued context lines.
+
+        If passed, print only the context lines that come before before_result_path and before_result_line.
+        """
+
+        for path, line_index, to_print in self.queued_context_lines:
+            if (
+                before_result_path is None
+                or path != before_result_path
+                # from a different file => print
+            ) or (
+                before_result_line is None
+                or line_index < before_result_line
+                # Before the context for current result => print
+            ):
+                self.maybe_print_header(path, line_index)
+                print(to_print, file=self.stdout)
+                self.printed_context_lines.add((path, line_index))
+        self.queued_context_lines[:] = []
 
 
-def _format_context_line_default(result: Match, context_line: str, context_line_index: int) -> str:
-    return f"{result.path}-{context_line_index + 1}-{context_line}"
+class DefaultFormatter:
+    # Same formatting as ripgrep:
+    def format_header(self, path: Pathlike, context_line_index: int) -> str | None:
+        return None
 
+    def format_context_line(self, result: Match, context_line: str, context_line_index: int) -> str:
+        return f"{result.path}-{context_line_index + 1}-{context_line}"
 
-def _format_match_line_default(result: Match) -> str:
-    return f"{result.path}:{result.position.lineno}:{result.position.col_offset + 1}:{result.matching_line}"
+    def format_match_line(self, result: Match) -> str:
+        return f"{result.path}:{result.position.lineno}:{result.position.col_offset + 1}:{result.matching_line}"
 
 
 # Formatting for heading mode
 
 
-def _format_context_line_heading(result: Match, context_line: str, context_line_index: int) -> str:
-    return context_line
+class HeadingFormatter:
+    def __init__(self) -> None:
+        self.first_result_printed = False
 
+    def format_header(self, path: Pathlike, context_line_index: int) -> str | None:
+        # Start with hash like a Python comment, for integration with tools that
+        # consume Python code
 
-def _format_match_line_heading(result: Match) -> str:
-    return result.matching_line
+        # Gap between results, for all but very first
+        spacer = "\n" if self.first_result_printed else ""
+        self.first_result_printed = True
+        return spacer + f"# {path}:{context_line_index + 1}:"
 
+    def format_context_line(self, result: Match, context_line: str, context_line_index: int) -> str:
+        return context_line
 
-def _format_header(path: Pathlike, context_line_index: int) -> str:
-    # Start with hash like a Python comment, for integration with tools that
-    # consume Python code
-    return f"# {path}:{context_line_index + 1}:"
+    def format_match_line(self, result: Match) -> str:
+        return result.matching_line
 
 
 # Statement handling
