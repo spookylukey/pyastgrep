@@ -133,7 +133,7 @@ def print_results(
         matches += 1
         line_index = result.position.lineno - 1
         if quiet:
-            break
+            continue
 
         # Previous result's 'after' lines
         flush_context_lines(
