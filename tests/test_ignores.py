@@ -48,35 +48,38 @@ def test_default_ignores():
         "custom_gitignored/subdir/should_be_ignored2.py",
         # /subsubdir is in this subdir's .gitignore
         "subsubdir/not_ignored.py",
+        # globalignored is in our 'global' .gitgnore (global_gitignore_file, monkeypatched below)
+        "global_ignored/should_be_ignored.py",
     ]
 
-    with chdir(DIR):
-        files = list(get_files_to_search([Path(".")]))
+    with patch("pyastgrep.ignores.get_global_gitignore", lambda: DIR / "global_gitignore_file"):
+        with chdir(DIR):
+            files = list(get_files_to_search([Path(".")]))
 
-    for p in FOUND:
-        assert Path(p) in files
+        for p in FOUND:
+            assert Path(p) in files
 
-    for p in IGNORED:
-        # Sanity check:
-        assert (DIR / Path(p)).exists()
-        # Test:
-        assert Path(p) not in files
+        for p in IGNORED:
+            # Sanity check:
+            assert (DIR / Path(p)).exists()
+            # Test:
+            assert Path(p) not in files
 
-    # We should get the same results if we start the search higher up.
-    # This is important for testing whether we are discovering .gitignore
-    # files as we walk sub directories
+        # We should get the same results if we start the search higher up.
+        # This is important for testing whether we are discovering .gitignore
+        # files as we walk sub directories
 
-    with chdir(REPO_ROOT):
-        files2 = list(get_files_to_search([Path(".")]))
+        with chdir(REPO_ROOT):
+            files2 = list(get_files_to_search([Path(".")]))
 
-    for p in FOUND:
-        assert (DIR_FROM_ROOT / Path(p)) in files2
+        for p in FOUND:
+            assert (DIR_FROM_ROOT / Path(p)) in files2
 
-    for p in IGNORED:
-        # Sanity check:
-        assert (DIR / Path(p)).exists()
-        # Test:
-        assert (DIR_FROM_ROOT / Path(p)) not in files2
+        for p in IGNORED:
+            # Sanity check:
+            assert (DIR / Path(p)).exists()
+            # Test:
+            assert (DIR_FROM_ROOT / Path(p)) not in files2
 
 
 def test_include_hidden():
