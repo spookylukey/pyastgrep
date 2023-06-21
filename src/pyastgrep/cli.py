@@ -133,6 +133,13 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
     if args.debug:
         import logging
 
+        from pathspec import PathSpec
+        from pathspec.patterns.gitwildmatch import GitWildMatchPattern
+
+        # Monkey patch PathSpec to have more useful reprs
+        PathSpec.__repr__ = lambda self: f"<PathSpec {self.patterns!r}>"  # type: ignore
+        GitWildMatchPattern.__repr__ = lambda self: f"<GitWildMatchPattern {self.regex}"  # type: ignore
+
         logging.basicConfig(level=logging.DEBUG)
 
     before_context = args.before_context or args.context
