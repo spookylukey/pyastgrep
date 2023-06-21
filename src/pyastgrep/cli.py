@@ -100,6 +100,12 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
+    "--no-ignore-vcs",
+    help="Don't respect version control ignore files (.gitignore, etc.). ",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
     "--debug",
     help="Print debugging information, especially for why files are skipped",
     action="store_true",
@@ -163,6 +169,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
                 xpath2=args.xpath2,
                 include_hidden=args.hidden,
                 respect_global_ignores=not args.no_ignore_global,
+                respect_vcs_ignores=not args.no_ignore_vcs,
             ),
             print_xml=args.xml,
             print_ast=args.ast,

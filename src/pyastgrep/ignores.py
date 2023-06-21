@@ -109,6 +109,7 @@ class DirWalker:
         absolute_base: bool = False,
         include_hidden: bool = False,
         respect_global_ignores: bool = True,
+        respect_vcs_ignores: bool = True,
     ):
         # DirWalker is immutable outside __init__
         self.glob: str = glob
@@ -116,9 +117,10 @@ class DirWalker:
             pathspecs = []
         if init_global_pathspecs:
             if respect_global_ignores:
-                global_gitignore = get_global_gitignore()
-                if global_gitignore and global_gitignore.exists():
-                    pathspecs.append(pathspec_for_gitignore(global_gitignore, is_global_gitignore=True))
+                if respect_vcs_ignores:
+                    global_gitignore = get_global_gitignore()
+                    if global_gitignore and global_gitignore.exists():
+                        pathspecs.append(pathspec_for_gitignore(global_gitignore, is_global_gitignore=True))
             # POSIX hidden files:
             if not include_hidden:
                 pathspecs.append(PathSpec([GitWildMatchPattern(".*")]))
@@ -126,6 +128,7 @@ class DirWalker:
         self.start_directory: Path | None = start_directory
         self.working_dir: Path | None = working_dir
         self.absolute_base: bool = absolute_base
+        self.respect_vcs_ignores: bool = respect_vcs_ignores
 
     def for_dir(self, directory: Path, working_dir: Path) -> DirWalker:
         """
@@ -134,9 +137,13 @@ class DirWalker:
         # Here we keep the already loaded global gitignore, and add any
         # more needed, up to and including the current directory.
         base_directory = directory.resolve()
-        pathspecs = self.pathspecs + [
-            pathspec_for_gitignore(ignorepath) for ignorepath in find_gitignore_files(base_directory, recurse_up=True)
-        ]
+        if self.respect_vcs_ignores:
+            pathspecs = self.pathspecs + [
+                pathspec_for_gitignore(ignorepath)
+                for ignorepath in find_gitignore_files(base_directory, recurse_up=True)
+            ]
+        else:
+            pathspecs = self.pathspecs
         # We also need to add a negative override to ensure that paths specified
         # directly are not ignored.
         if directory != Path("."):
@@ -161,9 +168,12 @@ class DirWalker:
         # and just check the new current dir.
         if self.start_directory is None:
             raise AssertionError("Must use `for_dir` before `for_subdir`")
-        extra_pathspecs: list[PathSpecLike] = [
-            pathspec_for_gitignore(ignorepath) for ignorepath in find_gitignore_files(directory, recurse_up=False)
-        ]
+        if self.respect_vcs_ignores:
+            extra_pathspecs: list[PathSpecLike] = [
+                pathspec_for_gitignore(ignorepath) for ignorepath in find_gitignore_files(directory, recurse_up=False)
+            ]
+        else:
+            extra_pathspecs = []
 
         return self._clone(
             pathspecs=self.pathspecs + extra_pathspecs,
@@ -222,6 +232,7 @@ class DirWalker:
             start_directory=start_directory,
             working_dir=self.working_dir if working_dir is DEFAULT else working_dir,
             absolute_base=self.absolute_base if absolute_base is DEFAULT else absolute_base,
+            respect_vcs_ignores=self.respect_vcs_ignores,
         )
 
 

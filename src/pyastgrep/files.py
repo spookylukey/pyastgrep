@@ -19,6 +19,7 @@ def get_files_to_search(
     paths: Sequence[Path | BinaryIO],
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
+    respect_vcs_ignores: bool = True,
 ) -> Generator[Path | BinaryIO | MissingPath, None, None]:
     """
     Entry-point function for finding files to search.
@@ -29,7 +30,12 @@ def get_files_to_search(
     By default, global .gitignore file will be respected - pass
     `respect_global_ignores=False` to ignore it
     """
-    walker = DirWalker(glob="*.py", include_hidden=include_hidden, respect_global_ignores=respect_global_ignores)
+    walker = DirWalker(
+        glob="*.py",
+        include_hidden=include_hidden,
+        respect_global_ignores=respect_global_ignores,
+        respect_vcs_ignores=respect_vcs_ignores,
+    )
     working_dir = Path(os.getcwd())
     for path in paths:
         if isinstance(path, Path):

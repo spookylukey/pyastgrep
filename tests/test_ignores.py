@@ -48,6 +48,8 @@ def test_default_ignores():
         "custom_gitignored/subdir/should_be_ignored2.py",
         # /subsubdir is in this subdir's .gitignore
         "subsubdir/not_ignored.py",
+        # should_be_ignored.py is in subsubdir's .gitignore
+        "subdir/subsubdir/should_be_ignored.py",
         # globalignored is in our 'global' .gitgnore (global_gitignore_file, monkeypatched below)
         "global_ignored/should_be_ignored.py",
     ]
@@ -95,6 +97,13 @@ def test_respect_global_ignores():
             assert Path("global_ignored/should_be_ignored.py") in list(
                 get_files_to_search([Path(".")], respect_global_ignores=False)
             )
+
+
+def test_respect_vcs_ignores():
+    with chdir(DIR):
+        files = list(get_files_to_search([Path(".")], respect_vcs_ignores=False))
+        assert Path("custom_gitignored/should_be_ignored2.py") in files
+        assert Path("subdir/subsubdir/should_be_ignored.py") in files
 
 
 def test_override_on_cli():
