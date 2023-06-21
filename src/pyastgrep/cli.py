@@ -16,7 +16,7 @@ from typing import BinaryIO
 from lxml.etree import XPathEvalError
 
 from pyastgrep import __version__
-from pyastgrep.printer import StaticContext, print_results
+from pyastgrep.printer import StatementContext, StaticContext, print_results
 from pyastgrep.search import search_python_files
 
 NAME_AND_VERSION = "pyastgrep " + __version__
@@ -24,6 +24,13 @@ parser = argparse.ArgumentParser(
     prog=NAME_AND_VERSION,
     description="Grep Python files uses XPath expressions against the AST",
 )
+
+
+def context_parameter(param: str) -> int | StatementContext:
+    if param == "statement":
+        return StatementContext()
+    return int(param)  # Will raise ValueError if invalid, which is handled by argparse
+
 
 # Names of arguments:
 #
@@ -63,7 +70,7 @@ parser.add_argument(
     "-C",
     "--context",
     help="lines of context to display before and after matching line",
-    type=int,
+    type=context_parameter,
     default=0,
 )
 parser.add_argument(
@@ -142,11 +149,18 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
 
         logging.basicConfig(level=logging.DEBUG)
 
-    before_context = args.before_context or args.context
-    after_context = args.after_context or args.context
-    if (before_context or after_context) and args.quiet:
-        print("ERROR: Context cannot be specified when suppressing output.", file=sys.stderr)
-        return ERROR
+    context: StaticContext | StatementContext
+    if isinstance(args.context, StatementContext):
+        if args.before_context or args.after_context:
+            print("ERROR: -A or -B when using --context=statement.", file=sys.stderr)
+        context = args.context
+    else:
+        before_context = args.before_context or args.context
+        after_context = args.after_context or args.context
+        if (before_context or after_context) and args.quiet:
+            print("ERROR: Context cannot be specified when suppressing output.", file=sys.stderr)
+            return ERROR
+        context = StaticContext(before=before_context, after=after_context)
 
     if stdin is None:
         # Need to use .buffer here, to get bytes version, not text
@@ -177,11 +191,12 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
                 include_hidden=args.hidden,
                 respect_global_ignores=not args.no_ignore_global,
                 respect_vcs_ignores=not args.no_ignore_vcs,
+                add_ast_parent_nodes=isinstance(context, StatementContext),
             ),
             print_xml=args.xml,
             print_ast=args.ast,
             quiet=args.quiet,
-            context=StaticContext(before=before_context, after=after_context),
+            context=context,
             heading=args.heading,
         )
     except XPathEvalError:

@@ -83,6 +83,7 @@ def search_python_files(
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
+    add_ast_parent_nodes: bool = False,
 ) -> Generator[Match | MissingPath | ReadError | NonElementReturned, None, None]:
     """
     Perform a recursive search through Python files.
@@ -118,7 +119,9 @@ def search_python_files(
             auto_dedent = True
 
         try:
-            str_contents, parsed_ast = parse_python_file(contents, source, auto_dedent=auto_dedent)
+            str_contents, parsed_ast = parse_python_file(
+                contents, source, auto_dedent=auto_dedent, add_ast_parent_nodes=add_ast_parent_nodes
+            )
         except SyntaxError as ex:
             yield ReadError(str(source), ex)
             continue

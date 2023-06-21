@@ -4,6 +4,8 @@ import sys
 from dataclasses import dataclass
 from typing import Iterable, TextIO
 
+from pyastgrep import ast_compat
+
 from . import xml
 from .search import Match, MissingPath, NonElementReturned, Pathlike, ReadError
 
@@ -14,11 +16,15 @@ class StaticContext:
     after: int = 0
 
 
+class StatementContext:
+    pass
+
+
 def print_results(
     results: Iterable[Match | MissingPath | ReadError | NonElementReturned],
     print_xml: bool = False,
     print_ast: bool = False,
-    context: StaticContext = StaticContext(before=0, after=0),
+    context: StaticContext | StatementContext = StaticContext(before=0, after=0),
     stdout: TextIO | None = None,
     stderr: TextIO | None = None,
     quiet: bool = False,
@@ -46,8 +52,6 @@ def print_results(
     #   rather than waiting (grouping by file would simplify some things)
     # - edge conditions
 
-    before_context = context.before
-    after_context = context.after
     printed_context_lines: set[tuple[Pathlike, int]] = set()
     queued_context_lines: list[tuple[Pathlike, int, str]] = []
 
@@ -77,18 +81,24 @@ def print_results(
                 print("", file=stdout)
             print(_format_header(path, line_index), file=stdout)
 
-    def flush_context_lines(*, before_result: Match | None = None) -> None:
+    def flush_context_lines(
+        *, before_result_path: Pathlike | None = None, before_result_line: int | None = None
+    ) -> None:
         """
-        Print queued context lines, but not if they would be covered by the passed
-        in result.
+        Print queued context lines.
+
+        If passed, print only the context lines that come before before_result_path and before_result_line.
         """
 
         for path, line_index, to_print in queued_context_lines:
             if (
-                before_result is None
-                or path != before_result.path  # from a different file => print
-                or line_index
-                < before_result.position.lineno - before_context - 1  # Before the context for current result => print
+                before_result_path is None
+                or path != before_result_path
+                # from a different file => print
+            ) or (
+                before_result_line is None
+                or line_index < before_result_line
+                # Before the context for current result => print
             ):
                 maybe_print_header(path, line_index)
                 print(to_print, file=stdout)
@@ -111,12 +121,21 @@ def print_results(
             do_error(f"Error: XPath expression returned a value that is not an AST node: {result.args[0]}")
             continue
 
+        if isinstance(context, StaticContext):
+            before_context = context.before
+            after_context = context.after
+        else:
+            before_context, after_context = _get_statement_context_lines(result)
+
         matches += 1
         line_index = result.position.lineno - 1
         if quiet:
             break
+
         # Previous result's 'after' lines
-        flush_context_lines(before_result=result)
+        flush_context_lines(
+            before_result_path=result.path, before_result_line=result.position.lineno - before_context - 1
+        )
 
         # This result's 'before' lines
         queue_context_lines(result, list(range(max(0, line_index - before_context), line_index)))
@@ -169,3 +188,26 @@ def _format_header(path: Pathlike, context_line_index: int) -> str:
     # Start with hash like a Python comment, for integration with tools that
     # consume Python code
     return f"# {path}:{context_line_index + 1}:"
+
+
+# Statement handling
+def _get_statement_context_lines(result: Match) -> tuple[int, int]:
+    result_node = current_node = result.ast_node
+    while True:
+        if isinstance(current_node, ast_compat.STATEMENT_AST):
+            break
+        parent = current_node.parent  # type: ignore
+
+        # If directly in the 'body' of a block statement, this node is
+        # 'statement-like' i.e. it is self-contained and could appear at top
+        # level in a module in most cases.
+        if isinstance(parent, ast_compat.BLOCK_AST) and current_node in parent.body:
+            break
+        current_node = parent
+    before_context = result_node.lineno - current_node.lineno
+    if isinstance(current_node.end_lineno, int):
+        after_context = current_node.end_lineno - result_node.lineno
+    else:
+        after_context = 0
+
+    return (before_context, after_context)
