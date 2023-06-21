@@ -79,29 +79,11 @@ def print_results(
             context_handler.flush_context_lines()
             continue
 
-        if isinstance(context, StaticContext):
-            before_context = context.before
-            after_context = context.after
-        else:
-            before_context, after_context = _get_statement_context_lines(result)
-
         matches += 1
-        line_index = result.position.lineno - 1
         if quiet:
             continue
 
-        # Previous result's 'after' lines
-        context_handler.flush_context_lines(
-            before_result_path=result.path,
-            before_result_line=result.position.lineno - before_context - 1,
-        )
-
-        # This result's 'before' lines
-        context_handler.queue_context_lines(result, list(range(max(0, line_index - before_context), line_index)))
-        context_handler.flush_context_lines()
-
-        # The actual result
-        context_handler.print_match_line(result, line_index)
+        context_handler.handle_result(result, context)
 
         if print_ast:
             print(astpretty.pformat(result.ast_node), file=stdout)
@@ -109,10 +91,6 @@ def print_results(
         if print_xml:
             print(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"), file=stdout)
 
-        # This result's 'after' lines
-        context_handler.queue_context_lines(
-            result, list(range(line_index + 1, min(len(result.file_lines), line_index + after_context + 1)))
-        )
     # Last result
     context_handler.flush_context_lines()
 
@@ -143,6 +121,33 @@ class ContextHandler:
         # Internal state this class manages:
         self.printed_context_lines: set[tuple[Pathlike, int]] = set()
         self.queued_context_lines: list[tuple[Pathlike, int, str]] = []
+
+    def handle_result(self, result: Match, context: StaticContext | StatementContext) -> None:
+        if isinstance(context, StaticContext):
+            before_context = context.before
+            after_context = context.after
+        else:
+            before_context, after_context = _get_statement_context_lines(result)
+
+        line_index = result.position.lineno - 1
+
+        # Previous result's 'after' lines
+        self.flush_context_lines(
+            before_result_path=result.path,
+            before_result_line=result.position.lineno - before_context - 1,
+        )
+
+        # This result's 'before' lines
+        self.queue_context_lines(result, list(range(max(0, line_index - before_context), line_index)))
+        self.flush_context_lines()
+
+        # The actual result
+        self.print_match_line(result, line_index)
+
+        # This result's 'after' lines
+        self.queue_context_lines(
+            result, list(range(line_index + 1, min(len(result.file_lines), line_index + after_context + 1)))
+        )
 
     def print_match_line(self, result: Match, line_index: int) -> None:
         self.maybe_print_header(result.path, line_index)
