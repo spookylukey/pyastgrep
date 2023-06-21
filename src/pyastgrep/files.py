@@ -15,8 +15,16 @@ class MissingPath:
     path: Path
 
 
-def get_files_to_search(paths: Sequence[Path | BinaryIO]) -> Generator[Path | BinaryIO | MissingPath, None, None]:
-    walker = DirWalker(glob="*.py")
+def get_files_to_search(
+    paths: Sequence[Path | BinaryIO], include_hidden: bool = False
+) -> Generator[Path | BinaryIO | MissingPath, None, None]:
+    """
+    Entry-point function for finding files to search.
+
+    By default, POSIX hidden files (starting with `.`) will be skipped - pass
+    `include_hidden=True` to include them.
+    """
+    walker = DirWalker(glob="*.py", include_hidden=include_hidden)
     working_dir = Path(os.getcwd())
     for path in paths:
         if isinstance(path, Path):

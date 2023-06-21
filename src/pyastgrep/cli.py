@@ -24,6 +24,10 @@ parser = argparse.ArgumentParser(
     prog=NAME_AND_VERSION,
     description="Grep Python files uses XPath expressions against the AST",
 )
+
+# Names of arguments:
+#
+# We try to match names from ripgrep where the behaviour is basically the same
 parser.add_argument("--version", action="version", version=NAME_AND_VERSION + f", Python {sys.version}")
 parser.add_argument(
     "-q",
@@ -81,6 +85,14 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
+    "-.",
+    "--hidden",
+    help="Search hidden files and directories, which are skipped by default. A file "
+    "or directory is considered hidden if its base name starts with a dot character ('.').",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
     "expr",
     help="XPath search expression",
 )
@@ -131,6 +143,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
                 paths,
                 expr,
                 xpath2=args.xpath2,
+                include_hidden=args.hidden,
             ),
             print_xml=args.xml,
             print_ast=args.ast,

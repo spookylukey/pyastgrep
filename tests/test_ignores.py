@@ -79,6 +79,13 @@ def test_default_ignores():
         assert (DIR_FROM_ROOT / Path(p)) not in files2
 
 
+def test_include_hidden():
+    with chdir(DIR):
+        assert Path(".custom_hidden/should_be_ignored.py") in list(
+            get_files_to_search([Path(".")], include_hidden=True)
+        )
+
+
 def test_override_on_cli():
     """
     Directories specified on command line should always be searched.
