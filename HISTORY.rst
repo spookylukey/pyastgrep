@@ -1,4 +1,4 @@
-Version 1.2 - unreleased
+Version 1.2 - 2023-06-21
 ------------------------
 
 * Added lots of flags/features:
