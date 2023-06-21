@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+import textwrap
 from dataclasses import dataclass
 from typing import Iterable, Protocol, TextIO
 
@@ -31,6 +32,14 @@ class Formatter(Protocol):
         pass
 
 
+class ContextHandler(Protocol):
+    def handle_result(self, result: Match) -> None:
+        pass
+
+    def flush(self) -> None:
+        pass
+
+
 def print_results(
     results: Iterable[Match | MissingPath | ReadError | NonElementReturned | FileFinished],
     print_xml: bool = False,
@@ -52,18 +61,19 @@ def print_results(
     matches = 0
     errors = 0
 
-    formatter: Formatter
+    context_handler: ContextHandler
     if heading:
-        formatter = HeadingFormatter()
+        if isinstance(context, StatementContext):
+            context_handler = StatementWithHeadingContextHandler(stdout=stdout)
+        else:
+            context_handler = DefaultContextHandler(config=context, stdout=stdout, formatter=HeadingFormatter())
     else:
-        formatter = DefaultFormatter()
+        context_handler = DefaultContextHandler(config=context, stdout=stdout, formatter=DefaultFormatter())
 
     def do_error(message: str) -> None:
         nonlocal errors
         print(message, file=stderr)
         errors += 1
-
-    context_handler = ContextHandler(config=context, stdout=stdout, formatter=formatter)
 
     for result in results:
         if isinstance(result, MissingPath):
@@ -76,14 +86,14 @@ def print_results(
             do_error(f"Error: XPath expression returned a value that is not an AST node: {result.args[0]}")
             continue
         elif isinstance(result, FileFinished):
-            context_handler.flush_context_lines()
+            context_handler.flush()
             continue
 
         matches += 1
         if quiet:
             continue
 
-        context_handler.handle_result(result, context)
+        context_handler.handle_result(result)
 
         if print_ast:
             print(astpretty.pformat(result.ast_node), file=stdout)
@@ -92,12 +102,12 @@ def print_results(
             print(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"), file=stdout)
 
     # Last result
-    context_handler.flush_context_lines()
+    context_handler.flush()
 
     return (matches, errors)
 
 
-class ContextHandler:
+class DefaultContextHandler:
     # Helper class to manage context lines:
     #
     # This is quite complex due to:
@@ -122,11 +132,11 @@ class ContextHandler:
         self.printed_context_lines: set[tuple[Pathlike, int]] = set()
         self.queued_context_lines: list[tuple[Pathlike, int, str]] = []
 
-    def handle_result(self, result: Match, context: StaticContext | StatementContext) -> None:
-        if isinstance(context, StaticContext):
-            before_context = context.before
-            after_context = context.after
-        else:
+    def handle_result(self, result: Match) -> None:
+        if isinstance(self.config, StaticContext):
+            before_context = self.config.before
+            after_context = self.config.after
+        elif isinstance(self.config, StatementContext):
             before_context, after_context = _get_statement_context_lines(result)
 
         line_index = result.position.lineno - 1
@@ -149,12 +159,16 @@ class ContextHandler:
             result, list(range(line_index + 1, min(len(result.file_lines), line_index + after_context + 1)))
         )
 
+    def flush(self) -> None:
+        self.flush_context_lines()
+
     def print_match_line(self, result: Match, line_index: int) -> None:
         self.maybe_print_header(result.path, line_index)
         print(self.formatter.format_match_line(result), file=self.stdout)
         self.printed_context_lines.add((result.path, line_index))
 
     def maybe_print_header(self, path: Pathlike, line_index: int) -> None:
+        # We print a the header only if there is a gap
         if (path, line_index - 1) not in self.printed_context_lines:
             header = self.formatter.format_header(path, line_index)
             if header is not None:
@@ -195,6 +209,54 @@ class ContextHandler:
                 print(to_print, file=self.stdout)
                 self.printed_context_lines.add((path, line_index))
         self.queued_context_lines[:] = []
+
+
+class StatementWithHeadingContextHandler:
+    # This is a special case for when we have headings and are displaying full
+    # statements. In this case, it is much more useful if we auto-dedent the
+    # statements, which will make the output valid Python, which can be useful
+    # if we are doing things like gathering example input.
+
+    # This requires a different strategy, because we need to dedent the whole
+    # statement at once. We don't have the issues with needing to wait for the
+    # next result, because context lines are not formatted different to matches.
+    # For cases of overlapping or nested matches, we still do need to take care
+    # not to print the same lines multiple times.
+
+    def __init__(self, *, stdout: TextIO):
+        # Configuration from outside:
+        self.stdout = stdout
+        self.formatter = HeadingFormatter()
+
+        # Managed state:
+        self.printed_context_lines: set[tuple[Pathlike, int]] = set()
+
+    def handle_result(self, result: Match) -> None:
+        line_index = result.position.lineno - 1
+        path = result.path
+
+        before_context, after_context = _get_statement_context_lines(result)
+        start_line_idx = line_index - before_context
+        end_line_idx = line_index + after_context
+        stop_line_idx = end_line_idx + 1
+
+        if (path, end_line_idx) in self.printed_context_lines:
+            # Already printed
+            return
+
+        if (path, start_line_idx - 1) not in self.printed_context_lines:
+            header = self.formatter.format_header(path, start_line_idx)
+            if header is not None:
+                print(header, file=self.stdout)
+
+        code = "\n".join(result.file_lines[start_line_idx:stop_line_idx])
+        to_print = textwrap.dedent(code)
+        print(to_print.rstrip("\n"), file=self.stdout)
+        for idx in range(start_line_idx, stop_line_idx):
+            self.printed_context_lines.add((path, idx))
+
+    def flush(self) -> None:
+        pass
 
 
 class DefaultFormatter:
