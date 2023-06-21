@@ -6,12 +6,15 @@ This is based on ripgrep behaviour:
 - Automatically respect global and local `.gitignore` files
 - Automatically ignore hidden files
 
-With some known differences/unimplemented features
+With some known differences/unimplemented features/bugs:
 
-- doesn't support `.ignore` files
+- doesn't yet support `.ignore` files
 - ripgrep does not respect `.gitignore` files if the starting directory is outside a git repo
   https://github.com/BurntSushi/ripgrep/issues/1109 but we do
 - ripgrep considers Windows files with hidden attribute to be hidden, we do not yet.
+- if starting inside hidden folders, we return nothing by default because the parent is hidden,
+  but ripgrep doesn't do this.
+
 """
 from __future__ import annotations
 
@@ -123,6 +126,9 @@ class DirWalker:
                         pathspecs.append(pathspec_for_gitignore(global_gitignore, is_global_gitignore=True))
             # POSIX hidden files:
             if not include_hidden:
+                # TODO we should probably use a different mechanism for hidden
+                # files, this causes problems and doesn't cope with Windows
+                # hidden files.
                 pathspecs.append(PathSpec([GitWildMatchPattern(".*")]))
         self.pathspecs: list[PathSpecLike] = pathspecs
         self.start_directory: Path | None = start_directory
