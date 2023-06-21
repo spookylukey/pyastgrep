@@ -1,3 +1,14 @@
+Version 1.2 - unreleased
+------------------------
+
+* Added lots of flags/features:
+
+  * ``--heading``
+  * ``--debug``
+  * ``--no-global-ignores``
+  * ``--no-ignore-vcs``
+  * ``--context=statement``
+
 Version 1.1 - 2023-06-09
 ------------------------
 
