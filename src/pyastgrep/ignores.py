@@ -59,6 +59,11 @@ class DirectoryPathSpec:
         return f"<DirectoryPathSpec {self.location!r} {self.pathspec!r}>"
 
 
+class GlobalGitIgnoreSpec(GitIgnoreSpec):
+    # This subclass exists currently only for the sake of debugging
+    pass
+
+
 PathSpecLike = Union[PathSpec, DirectoryPathSpec]
 
 
@@ -222,11 +227,10 @@ class DirWalker:
 
 def pathspec_for_gitignore(gitignore_file: Path, is_global_gitignore: bool = False) -> PathSpec | DirectoryPathSpec:
     with open(gitignore_file) as fp:
-        spec = GitIgnoreSpec.from_lines(fp)
         if is_global_gitignore:
-            return spec
+            return GlobalGitIgnoreSpec.from_lines(fp)
         else:
-            return DirectoryPathSpec(gitignore_file.parent, spec)
+            return DirectoryPathSpec(gitignore_file.parent, GitIgnoreSpec.from_lines(fp))
 
 
 def find_gitignore_files(starting_path: Path, *, recurse_up: bool = True) -> list[Path]:
