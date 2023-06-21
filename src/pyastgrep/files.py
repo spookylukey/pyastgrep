@@ -10,7 +10,7 @@ from typing import BinaryIO, Generator, Sequence
 from .ignores import DirWalker
 
 
-@dataclass
+@dataclass(frozen=True)
 class MissingPath:
     path: Path
 

@@ -22,7 +22,7 @@ else:
     Pathlike = Path
 
 
-@dataclass
+@dataclass(frozen=True)
 class Match:
     path: Pathlike
     file_lines: list[str]
@@ -35,13 +35,13 @@ class Match:
         return self.file_lines[self.position.lineno - 1]
 
 
-@dataclass
+@dataclass(frozen=True)
 class Position:
     lineno: int  # 1-indexed, as per AST
     col_offset: int  # 0-indexed, as per AST
 
 
-@dataclass
+@dataclass(frozen=True)
 class ReadError:
     path: str
     exception: Exception
