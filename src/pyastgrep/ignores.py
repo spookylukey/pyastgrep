@@ -103,15 +103,17 @@ class DirWalker:
         working_dir: Path | None = None,
         absolute_base: bool = False,
         include_hidden: bool = False,
+        respect_global_ignores: bool = True,
     ):
         # DirWalker is immutable outside __init__
         self.glob: str = glob
         if pathspecs is DEFAULT:
             pathspecs = []
         if init_global_pathspecs:
-            global_gitignore = get_global_gitignore()
-            if global_gitignore and global_gitignore.exists():
-                pathspecs.append(pathspec_for_gitignore(global_gitignore, is_global_gitignore=True))
+            if respect_global_ignores:
+                global_gitignore = get_global_gitignore()
+                if global_gitignore and global_gitignore.exists():
+                    pathspecs.append(pathspec_for_gitignore(global_gitignore, is_global_gitignore=True))
             # POSIX hidden files:
             if not include_hidden:
                 pathspecs.append(PathSpec([GitWildMatchPattern(".*")]))

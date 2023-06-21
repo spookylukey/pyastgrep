@@ -81,6 +81,7 @@ def search_python_files(
     expression: str,
     xpath2: bool = False,
     include_hidden: bool = False,
+    respect_global_ignores: bool = True,
 ) -> Generator[Match | MissingPath | ReadError | NonElementReturned, None, None]:
     """
     Perform a recursive search through Python files.
@@ -91,7 +92,9 @@ def search_python_files(
     """
     query_func = get_query_func(xpath2=xpath2)
 
-    for path in get_files_to_search(paths, include_hidden=include_hidden):
+    for path in get_files_to_search(
+        paths, include_hidden=include_hidden, respect_global_ignores=respect_global_ignores
+    ):
         node_mappings: dict[_Element, ast.AST] = {}
         source: Pathlike
         auto_dedent = False

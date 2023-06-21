@@ -89,6 +89,14 @@ def test_include_hidden():
         )
 
 
+def test_respect_global_ignores():
+    with patch("pyastgrep.ignores.get_global_gitignore", lambda: DIR / "global_gitignore_file"):
+        with chdir(DIR):
+            assert Path("global_ignored/should_be_ignored.py") in list(
+                get_files_to_search([Path(".")], respect_global_ignores=False)
+            )
+
+
 def test_override_on_cli():
     """
     Directories specified on command line should always be searched.

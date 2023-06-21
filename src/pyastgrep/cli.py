@@ -93,6 +93,13 @@ parser.add_argument(
     default=False,
 )
 parser.add_argument(
+    "--no-ignore-global",
+    help="Don't respect ignore files that come from \"global\" sources such as git's "
+    "`core.excludesFile` configuration option (typically ~/.config/git/ignore` or ~/.gitignore)).",
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
     "--debug",
     help="Print debugging information, especially for why files are skipped",
     action="store_true",
@@ -155,6 +162,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
                 expr,
                 xpath2=args.xpath2,
                 include_hidden=args.hidden,
+                respect_global_ignores=not args.no_ignore_global,
             ),
             print_xml=args.xml,
             print_ast=args.ast,

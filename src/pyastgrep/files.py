@@ -16,15 +16,20 @@ class MissingPath:
 
 
 def get_files_to_search(
-    paths: Sequence[Path | BinaryIO], include_hidden: bool = False
+    paths: Sequence[Path | BinaryIO],
+    include_hidden: bool = False,
+    respect_global_ignores: bool = True,
 ) -> Generator[Path | BinaryIO | MissingPath, None, None]:
     """
     Entry-point function for finding files to search.
 
     By default, POSIX hidden files (starting with `.`) will be skipped - pass
     `include_hidden=True` to include them.
+
+    By default, global .gitignore file will be respected - pass
+    `respect_global_ignores=False` to ignore it
     """
-    walker = DirWalker(glob="*.py", include_hidden=include_hidden)
+    walker = DirWalker(glob="*.py", include_hidden=include_hidden, respect_global_ignores=respect_global_ignores)
     working_dir = Path(os.getcwd())
     for path in paths:
         if isinstance(path, Path):
