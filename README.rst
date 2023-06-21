@@ -285,6 +285,22 @@ things that our `cssselect (our dependency) does not yet support
 Tips
 ----
 
+Command line flags
+~~~~~~~~~~~~~~~~~~
+
+There are a growing number of command line flags – see ``pyastgrep --help``
+
+Extracting code snippets
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to extract standalone snippets of code, try ``--context=statement
+--heading`` which does automatic dedenting. e.g. to extract all functions and
+methods, with leading whitespace removed, do:
+
+.. code-block:: bash
+
+   $ pyastgrep --heading -C statement './/FunctionDef'
+
 Absolute paths
 ~~~~~~~~~~~~~~
 To get pyastgrep to print absolute paths in results, pass the current absolute

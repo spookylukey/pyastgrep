@@ -11,6 +11,8 @@ Version 1.2 - unreleased
 
 * Handle Ctrl-C cleanly
 
+* Auto-dedenting of code when using ``--heading --context=statement``
+
 Version 1.1 - 2023-06-09
 ------------------------
 
