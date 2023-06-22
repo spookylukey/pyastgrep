@@ -39,48 +39,52 @@ parser.add_argument("--version", action="version", version=NAME_AND_VERSION + f"
 parser.add_argument(
     "-q",
     "--quiet",
-    help="hide output of matches",
+    help="Hide output of matches",
     action="store_true",
 )
 parser.add_argument(
     "--ast",
-    help="pretty-print the matching AST objects",
+    help="Pretty-print the matching AST objects",
     action="store_true",
 )
 parser.add_argument(
     "--xml",
-    help="pretty-print the matching XML elements",
+    help="Pretty-print the matching XML elements",
     action="store_true",
 )
 parser.add_argument(
     "-A",
     "--after-context",
-    help="lines of context to display after matching line",
+    help="Lines of context to display after matching line",
     type=int,
     default=0,
 )
 parser.add_argument(
     "-B",
     "--before-context",
-    help="lines of context to display after matching line",
+    help="Lines of context to display after matching line",
     type=int,
     default=0,
 )
 parser.add_argument(
     "-C",
     "--context",
-    help="lines of context to display before and after matching line",
+    help="Lines of context to display before and after matching line, as an integer. "
+    "You can also use '--context=statement' to print the complete statement of a given match. "
+    "When combined with --heading, this has some extra behaviour:"
+    " code is automatically dedented;"
+    " multiple matches within the same statement won't be printed twice.",
     type=context_parameter,
     default=0,
 )
 parser.add_argument(
     "--css",
-    help="interpret expression as a CSS selector",
+    help="Interpret expression as a CSS selector",
     action="store_true",
 )
 parser.add_argument(
     "--xpath2",
-    help="use XPath 2.0 functions and selectors. This currently makes matching significantly slower, "
+    help="Use XPath 2.0 functions and selectors. This currently makes matching significantly slower, "
     "and re:match and re:search functions are not supported",
     action="store_true",
     default=False,
