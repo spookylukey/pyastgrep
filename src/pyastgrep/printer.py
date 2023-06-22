@@ -228,8 +228,8 @@ class StatementWithHeadingContextHandler:
     # This requires a different strategy, because we need to dedent the whole
     # statement at once. We don't have the issues with needing to wait for the
     # next result, because context lines are not formatted different to matches.
-    # For cases of overlapping or nested matches, we still do need to take care
-    # not to print the same lines multiple times.
+    # For cases of overlapping or nested matches, we don't print the same lines
+    # multiple times.
 
     def __init__(self, *, line_printer: LinePrinter):
         # Configuration from outside:

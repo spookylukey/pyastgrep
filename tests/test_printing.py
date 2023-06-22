@@ -64,6 +64,47 @@ context_example.py-8-    # Final comment
     )
 
 
+def test_multiple_per_line():
+    output = run_print(DIR, './/Constant[@value="1"]', ["multiple.py"], context=StaticContext(before=1, after=0)).stdout
+    assert (
+        output
+        == """
+multiple.py-2-# flake8: noqa
+multiple.py:3:6:x = (1, 1)
+multiple.py:3:9:x = (1, 1)
+""".lstrip()
+    )
+
+
+def test_multiple_per_line_statement():
+    output = run_print(DIR, './/Constant[@value="1"]', ["multiple.py"], context=StatementContext(), heading=True).stdout
+    assert (
+        output
+        == """
+# multiple.py:3:
+x = (1, 1)
+""".lstrip()
+    )
+
+
+def test_multiple_per_line_statement_no_heading():
+    output = run_print(
+        DIR, './/Constant[@type="int"]', ["multiple.py"], context=StatementContext(), heading=False
+    ).stdout
+    assert (
+        output
+        == """
+multiple.py:3:6:x = (1, 1)
+multiple.py:3:9:x = (1, 1)
+multiple.py-4-y = [
+multiple.py:5:5:    2,
+multiple.py:6:5:    3, 4,
+multiple.py:6:8:    3, 4,
+multiple.py-7-]
+""".lstrip()
+    )
+
+
 def test_encoding():
     # Use stdin method rather than separate file, because one of our linters
     # (pyupgrade) complains about the encoding and workarounds fail.
