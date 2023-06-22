@@ -5,7 +5,7 @@ import textwrap
 from dataclasses import dataclass
 from typing import Iterable, Protocol, TextIO
 
-from pyastgrep import ast_compat
+from pyastgrep import ast_utils
 
 from . import xml
 from .search import FileFinished, Match, MissingPath, NonElementReturned, Pathlike, ReadError
@@ -296,21 +296,11 @@ class HeadingFormatter:
 
 # Statement handling
 def _get_statement_context_lines(result: Match) -> tuple[int, int]:
-    result_node = current_node = result.ast_node
-    while True:
-        if isinstance(current_node, ast_compat.STATEMENT_AST):
-            break
-        parent = current_node.parent  # type: ignore
-
-        # If directly in the 'body' of a block statement, this node is
-        # 'statement-like' i.e. it is self-contained and could appear at top
-        # level in a module in most cases.
-        if isinstance(parent, ast_compat.BLOCK_AST) and current_node in parent.body:
-            break
-        current_node = parent
-    before_context = result_node.lineno - current_node.lineno
-    if isinstance(current_node.end_lineno, int):
-        after_context = current_node.end_lineno - result_node.lineno
+    result_node = result.ast_node
+    statement_node = ast_utils.get_ast_statement_node(result_node)
+    before_context = result_node.lineno - statement_node.lineno
+    if isinstance(statement_node.end_lineno, int):
+        after_context = statement_node.end_lineno - result_node.lineno
     else:
         after_context = 0
 

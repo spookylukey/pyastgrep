@@ -1,13 +1,13 @@
 """
-Compatibility module for different ast stdlib versions
+Compatibility and utility module for different ast stdlib versions
+
+See https://docs.python.org/3/library/ast.html
 """
 
 import ast
 
-# See https://docs.python.org/3/library/ast.html
-
 """
-For changes between versions, try this one liner in bash/zsh:
+For changes between Python versions, try this one liner in bash/zsh:
 
 diff -u <(python3.10 -c 'import ast; print("\n".join(sorted(dir(ast))))') \
         <(python3.11 -c 'import ast; print("\n".join(sorted(dir(ast))))')
@@ -56,3 +56,23 @@ STATEMENT_AST = BLOCK_AST + tuple(
     ]
     if i
 )
+
+
+def get_ast_statement_node(ast_node: ast.AST) -> ast.AST:
+    """
+    For a given AST node, return the statement node it belongs to.
+    """
+    current_node = ast_node
+    while True:
+        if isinstance(current_node, STATEMENT_AST):
+            break
+        parent = current_node.parent  # type: ignore
+
+        # If directly in the 'body' of a block statement, this node is
+        # 'statement-like' i.e. it is self-contained and could appear at top
+        # level in a module in most cases.
+        if isinstance(parent, BLOCK_AST) and current_node in parent.body:
+            break
+        current_node = parent
+
+    return current_node
