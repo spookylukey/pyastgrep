@@ -2,23 +2,11 @@ from __future__ import annotations
 
 import sys
 import textwrap
-from dataclasses import dataclass
 from typing import Callable, Iterable, Protocol, TextIO
 
-from pyastgrep import ast_utils
-
 from . import xml
+from .context import ContextType, StatementContext, StaticContext
 from .search import FileFinished, Match, MissingPath, NonElementReturned, Pathlike, ReadError
-
-
-@dataclass(frozen=True)
-class StaticContext:
-    before: int = 0
-    after: int = 0
-
-
-class StatementContext:
-    pass
 
 
 class Formatter(Protocol):
@@ -47,7 +35,7 @@ def print_results(
     results: Iterable[Match | MissingPath | ReadError | NonElementReturned | FileFinished],
     print_xml: bool = False,
     print_ast: bool = False,
-    context: StaticContext | StatementContext = StaticContext(before=0, after=0),
+    context: ContextType = StaticContext(before=0, after=0),
     stdout: TextIO | None = None,
     stderr: TextIO | None = None,
     quiet: bool = False,
@@ -78,10 +66,12 @@ def print_results(
             context_handler = StatementWithHeadingContextHandler(line_printer=line_printer)
         else:
             context_handler = DefaultContextHandler(
-                config=context, line_printer=line_printer, formatter=HeadingFormatter()
+                context_type=context, line_printer=line_printer, formatter=HeadingFormatter()
             )
     else:
-        context_handler = DefaultContextHandler(config=context, line_printer=line_printer, formatter=DefaultFormatter())
+        context_handler = DefaultContextHandler(
+            context_type=context, line_printer=line_printer, formatter=DefaultFormatter()
+        )
 
     for result in results:
         if isinstance(result, MissingPath):
@@ -115,6 +105,9 @@ def print_results(
     return (matches, errors)
 
 
+# Context handlers
+
+
 class DefaultContextHandler:
     # Helper class to manage context lines:
     #
@@ -130,9 +123,9 @@ class DefaultContextHandler:
     #   to be sure they don't contain a match line.
     # - edge conditions
 
-    def __init__(self, *, config: StaticContext | StatementContext, line_printer: LinePrinter, formatter: Formatter):
+    def __init__(self, *, context_type: ContextType, line_printer: LinePrinter, formatter: Formatter):
         # Configuration from outside:
-        self.config = config
+        self.context_type = context_type
         self.line_printer = line_printer
         self.formatter = formatter
 
@@ -141,11 +134,7 @@ class DefaultContextHandler:
         self.queued_context_lines: list[tuple[Pathlike, int, str]] = []
 
     def handle_result(self, result: Match) -> None:
-        if isinstance(self.config, StaticContext):
-            before_context = self.config.before
-            after_context = self.config.after
-        elif isinstance(self.config, StatementContext):
-            before_context, after_context = _get_statement_context_lines(result)
+        before_context, after_context = self.context_type.get_context_lines_for_result(result)
 
         line_index = result.position.lineno - 1
 
@@ -235,6 +224,7 @@ class StatementWithHeadingContextHandler:
         # Configuration from outside:
         self.line_printer = line_printer
         self.formatter = HeadingFormatter()
+        self.context_type = StatementContext()
 
         # Managed state:
         self.printed_context_lines: set[tuple[Pathlike, int]] = set()
@@ -243,7 +233,7 @@ class StatementWithHeadingContextHandler:
         line_index = result.position.lineno - 1
         path = result.path
 
-        before_context, after_context = _get_statement_context_lines(result)
+        before_context, after_context = self.context_type.get_context_lines_for_result(result)
         start_line_idx = line_index - before_context
         end_line_idx = line_index + after_context
         stop_line_idx = end_line_idx + 1
@@ -267,6 +257,9 @@ class StatementWithHeadingContextHandler:
         pass
 
 
+# Formatters
+
+
 class DefaultFormatter:
     # Same formatting as ripgrep:
     def format_header(self, path: Pathlike, context_line_index: int) -> str | None:
@@ -277,9 +270,6 @@ class DefaultFormatter:
 
     def format_match_line(self, result: Match) -> str:
         return f"{result.path}:{result.position.lineno}:{result.position.col_offset + 1}:{result.matching_line}"
-
-
-# Formatting for heading mode
 
 
 class HeadingFormatter:
@@ -300,16 +290,3 @@ class HeadingFormatter:
 
     def format_match_line(self, result: Match) -> str:
         return result.matching_line
-
-
-# Statement handling
-def _get_statement_context_lines(result: Match) -> tuple[int, int]:
-    result_node = result.ast_node
-    statement_node = ast_utils.get_ast_statement_node(result_node)
-    before_context = result_node.lineno - statement_node.lineno
-    if isinstance(statement_node.end_lineno, int):
-        after_context = statement_node.end_lineno - result_node.lineno
-    else:
-        after_context = 0
-
-    return (before_context, after_context)

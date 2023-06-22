@@ -7,6 +7,7 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
+from pyastgrep.context import ContextType
 from pyastgrep.printer import StatementContext, StaticContext, print_results
 from pyastgrep.search import search_python_files
 
@@ -42,7 +43,7 @@ def run_print(
     paths: list[str | Path | typing.BinaryIO] | None = None,
     xpath2: bool = False,
     print_xml: bool = False,
-    context: StaticContext | StatementContext = StaticContext(before=0, after=0),
+    context: ContextType = StaticContext(before=0, after=0),
     heading=False,
 ) -> Output:
     # As much as possible, we're avoiding capsys or other techniques that
