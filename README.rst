@@ -124,7 +124,7 @@ Usages of a function called ``open``:
    $ pyastgrep './/Call/func/Name[@id="open"]'
    src/pyastgrep/search.py:88:18:            with open(path) as f:
 
-Literal numbers (Python 3.8+):
+Literal numbers:
 
 .. code:: bash
 
@@ -383,9 +383,12 @@ look at `libCST <https://github.com/Instagram/LibCST>`_.
 Use as a library
 ----------------
 
-pyastgrep is structured internally to make it easy to use a library as well as
-a CLI. However, while we will try not to break things without good reason, at this
-point we are not documenting or guaranteeing API stability for these functions.
+pyastgrep is structured internally to make it easy to use as a library as well
+as a CLI, with a clear separation of the different layers. However, while we
+will try not to break things without good reason, at this point we are not
+documenting or guaranteeing API stability for these functions. Please contribute
+to `the discussion <https://github.com/spookylukey/pyastgrep/discussions/18>`_
+if you have needs here.
 
 Editor integration
 ------------------
