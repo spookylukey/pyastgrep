@@ -1,3 +1,10 @@
+Version 1.2.1 - 2023-06-22
+--------------------------
+
+* Better ``--help`` text
+* Fixed bug with printing of decorators when using ``--context=statement``
+* Internal refactorings
+
 Version 1.2 - 2023-06-21
 ------------------------
 
