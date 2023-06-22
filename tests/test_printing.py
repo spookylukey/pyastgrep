@@ -1,6 +1,8 @@
 import io
 from pathlib import Path
 
+import pytest
+
 from pyastgrep.printer import StatementContext, StaticContext
 from tests.utils import run_print
 
@@ -228,7 +230,7 @@ def func(self):
     )
 
 
-def test_decorators():
+def test_decorators_statement_context():
     output = run_print(
         DIR, ".//FunctionDef | .//ClassDef", ["decorators.py"], heading=True, context=StatementContext()
     ).stdout
@@ -251,5 +253,36 @@ def function2():
 @cdec2
 class MyClass:
     pass
+""".lstrip()
+    )
+
+
+@pytest.mark.xfail
+def test_out_of_order_printing():
+    # Decorators appear in the AST/XML after the function signature, so are found later,
+    # but need to be printed before.
+    output = run_print(
+        DIR, './/Constant[@type="int"]', ["out_of_order.py"], context=StaticContext(before=0, after=0)
+    ).stdout
+    assert (
+        output
+        == """
+out_of_order.py:4:11:@dec(param=1)
+out_of_order.py:5:17:def function(arg=2):
+out_of_order.py:6:5:    3
+""".lstrip()
+    )
+
+    output2 = run_print(
+        DIR, './/Constant[@type="int"]', ["out_of_order.py"], context=StaticContext(before=1, after=1)
+    ).stdout
+    assert (
+        output2
+        == """
+out_of_order.py-3-
+out_of_order.py:4:11:@dec(param=1)
+out_of_order.py:5:17:def function(arg=2):
+out_of_order.py:6:5:    3
+out_of_order.py-7-
 """.lstrip()
     )
