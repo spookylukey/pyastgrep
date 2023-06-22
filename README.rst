@@ -355,8 +355,8 @@ equal to ``"foo"``:
 
    $ pyastgrep './/Assign[./targets//Name[@id="foo"]]' --xml
 
-Limitations
------------
+Limitations and other tools
+---------------------------
 
 pyastgrep is useful for grepping Python code at a fairly low level. It can be
 used for various refactoring or linting tasks. Some linting tasks require higher
@@ -367,6 +367,12 @@ module. For these kinds of tasks, you might be interested in:
 
 * `Semgrep <https://semgrep.dev/>`_
 * `Fixit <https://github.com/Instagram/Fixit>`_
+
+
+If you are looking for something simpler, try:
+
+* Simon Willison’s `symbex <https://github.com/simonw/symbex/>`_ which can
+  extract functions/methods/classes.
 
 If you are using this as a library, you should note that while AST works well
 for linting, it’s not as good for rewriting code, because AST does not contain
