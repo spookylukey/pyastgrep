@@ -226,3 +226,30 @@ def func(self):
 """Docstring"""
 '''.lstrip()
     )
+
+
+def test_decorators():
+    output = run_print(
+        DIR, ".//FunctionDef | .//ClassDef", ["decorators.py"], heading=True, context=StatementContext()
+    ).stdout
+    assert (
+        output
+        == """
+# decorators.py:2:
+@fdec1
+def function():
+    pass
+
+# decorators.py:7:
+@fdec1
+@fdec2(param=1)
+def function2():
+    pass
+
+# decorators.py:13:
+@cdec1(param=2)
+@cdec2
+class MyClass:
+    pass
+""".lstrip()
+    )
