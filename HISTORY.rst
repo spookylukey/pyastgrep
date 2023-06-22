@@ -20,6 +20,8 @@ Version 1.2 - 2023-06-21
 
 * Auto-dedenting of code when using ``--heading --context=statement``
 
+* Dropped support for Python 3.7
+
 Version 1.1 - 2023-06-09
 ------------------------
 
