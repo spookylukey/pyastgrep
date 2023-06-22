@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 import textwrap
 from dataclasses import dataclass
-from typing import Iterable, Protocol, TextIO
+from typing import Callable, Iterable, Protocol, TextIO
 
 from pyastgrep import ast_utils
 
@@ -40,6 +40,9 @@ class ContextHandler(Protocol):
         pass
 
 
+LinePrinter = Callable[[str], None]
+
+
 def print_results(
     results: Iterable[Match | MissingPath | ReadError | NonElementReturned | FileFinished],
     print_xml: bool = False,
@@ -61,19 +64,24 @@ def print_results(
     matches = 0
     errors = 0
 
-    context_handler: ContextHandler
-    if heading:
-        if isinstance(context, StatementContext):
-            context_handler = StatementWithHeadingContextHandler(stdout=stdout)
-        else:
-            context_handler = DefaultContextHandler(config=context, stdout=stdout, formatter=HeadingFormatter())
-    else:
-        context_handler = DefaultContextHandler(config=context, stdout=stdout, formatter=DefaultFormatter())
-
     def do_error(message: str) -> None:
         nonlocal errors
         print(message, file=stderr)
         errors += 1
+
+    def line_printer(line: str) -> None:
+        print(line, file=stdout)
+
+    context_handler: ContextHandler
+    if heading:
+        if isinstance(context, StatementContext):
+            context_handler = StatementWithHeadingContextHandler(line_printer=line_printer)
+        else:
+            context_handler = DefaultContextHandler(
+                config=context, line_printer=line_printer, formatter=HeadingFormatter()
+            )
+    else:
+        context_handler = DefaultContextHandler(config=context, line_printer=line_printer, formatter=DefaultFormatter())
 
     for result in results:
         if isinstance(result, MissingPath):
@@ -96,10 +104,10 @@ def print_results(
         context_handler.handle_result(result)
 
         if print_ast:
-            print(astpretty.pformat(result.ast_node), file=stdout)
+            line_printer(astpretty.pformat(result.ast_node))
 
         if print_xml:
-            print(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"), file=stdout)
+            line_printer(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"))
 
     # Last result
     context_handler.flush()
@@ -122,10 +130,10 @@ class DefaultContextHandler:
     #   to be sure they don't contain a match line.
     # - edge conditions
 
-    def __init__(self, *, config: StaticContext | StatementContext, stdout: TextIO, formatter: Formatter):
+    def __init__(self, *, config: StaticContext | StatementContext, line_printer: LinePrinter, formatter: Formatter):
         # Configuration from outside:
         self.config = config
-        self.stdout = stdout
+        self.line_printer = line_printer
         self.formatter = formatter
 
         # Internal state this class manages:
@@ -164,7 +172,7 @@ class DefaultContextHandler:
 
     def print_match_line(self, result: Match, line_index: int) -> None:
         self.maybe_print_header(result.path, line_index)
-        print(self.formatter.format_match_line(result), file=self.stdout)
+        self.line_printer(self.formatter.format_match_line(result))
         self.printed_context_lines.add((result.path, line_index))
 
     def maybe_print_header(self, path: Pathlike, line_index: int) -> None:
@@ -172,7 +180,7 @@ class DefaultContextHandler:
         if (path, line_index - 1) not in self.printed_context_lines:
             header = self.formatter.format_header(path, line_index)
             if header is not None:
-                print(header, file=self.stdout)
+                self.line_printer(header)
 
     def queue_context_lines(self, result: Match, context_line_indices: list[int]) -> None:
         for context_line_index in context_line_indices:
@@ -206,7 +214,7 @@ class DefaultContextHandler:
                 # Before the context for current result => print
             ):
                 self.maybe_print_header(path, line_index)
-                print(to_print, file=self.stdout)
+                self.line_printer(to_print)
                 self.printed_context_lines.add((path, line_index))
         self.queued_context_lines[:] = []
 
@@ -223,9 +231,9 @@ class StatementWithHeadingContextHandler:
     # For cases of overlapping or nested matches, we still do need to take care
     # not to print the same lines multiple times.
 
-    def __init__(self, *, stdout: TextIO):
+    def __init__(self, *, line_printer: LinePrinter):
         # Configuration from outside:
-        self.stdout = stdout
+        self.line_printer = line_printer
         self.formatter = HeadingFormatter()
 
         # Managed state:
@@ -247,11 +255,11 @@ class StatementWithHeadingContextHandler:
         if (path, start_line_idx - 1) not in self.printed_context_lines:
             header = self.formatter.format_header(path, start_line_idx)
             if header is not None:
-                print(header, file=self.stdout)
+                self.line_printer(header)
 
         code = "\n".join(result.file_lines[start_line_idx:stop_line_idx])
         to_print = textwrap.dedent(code)
-        print(to_print.rstrip("\n"), file=self.stdout)
+        self.line_printer(to_print.rstrip("\n"))
         for idx in range(start_line_idx, stop_line_idx):
             self.printed_context_lines.add((path, idx))
 
