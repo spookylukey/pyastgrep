@@ -76,18 +76,15 @@ def get_encoding(python_file_bytes: bytes) -> str:
     return "utf-8"
 
 
-def parse_python_file(
-    contents: bytes, filename: str | Path, *, auto_dedent: bool, add_ast_parent_nodes: bool = False
-) -> tuple[str, ast.AST]:
+def parse_python_file(contents: bytes, filename: str | Path, *, auto_dedent: bool) -> tuple[str, ast.AST]:
     if auto_dedent:
         contents = auto_dedent_code(contents)
 
     parsed_ast: ast.AST = ast.parse(contents, str(filename))
-    if add_ast_parent_nodes:
-        # Needed for StatementContext
-        for node in ast.walk(parsed_ast):
-            for child in ast.iter_child_nodes(node):
-                child.parent = node  # type: ignore
+    # Needed for StatementContext and for position_from_node
+    for node in ast.walk(parsed_ast):
+        for child in ast.iter_child_nodes(node):
+            child.parent = node  # type: ignore
 
     # ast.parse does it's own encoding detection, which we have to replicate
     # here since we can't assume utf-8

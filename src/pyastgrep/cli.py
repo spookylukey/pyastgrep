@@ -195,7 +195,6 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
                 include_hidden=args.hidden,
                 respect_global_ignores=not args.no_ignore_global,
                 respect_vcs_ignores=not args.no_ignore_vcs,
-                add_ast_parent_nodes=isinstance(context, StatementContext),
             ),
             print_xml=args.xml,
             print_ast=args.ast,

@@ -60,19 +60,13 @@ class FileFinished:
     path: Pathlike
 
 
-def position_from_xml(element: _Element, node_mappings: dict[_Element, ast.AST] | None = None) -> Position | None:
-    if not hasattr(element, "xpath"):
-        # Most likely an _ElementUnicodeResult, the result of a query that terminated in
-        # an attribute rather than a node. We have no way of getting from here to
-        # something representing an AST node.
-        raise NonElementReturned(element)
-    try:
-        linenos = xml.lxml_query(element, "./ancestor-or-self::*[@lineno][1]/@lineno")
-        col_offsets = xml.lxml_query(element, "./ancestor-or-self::*[@col_offset][1]/@col_offset")
-    except AttributeError:
-        raise AttributeError("Element has no ancestor with line number/col offset")
-    if linenos and col_offsets:
-        return Position(int(linenos[0]), int(col_offsets[0]))
+def position_from_node(node: ast.AST) -> Position | None:
+    lineno = getattr(node, "lineno", None)
+    col_offset = getattr(node, "col_offset", None)
+    if lineno is not None and col_offset is not None:
+        return Position(int(lineno), int(col_offset))
+    if (parent := getattr(node, "parent", None)) is not None:
+        return position_from_node(parent)
     return None
 
 
@@ -92,7 +86,6 @@ def search_python_files(
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
-    add_ast_parent_nodes: bool = False,
 ) -> Generator[Match | MissingPath | ReadError | NonElementReturned | FileFinished, None, None]:
     """
     Perform a recursive search through Python files.
@@ -128,9 +121,7 @@ def search_python_files(
             auto_dedent = True
 
         try:
-            str_contents, parsed_ast = parse_python_file(
-                contents, source, auto_dedent=auto_dedent, add_ast_parent_nodes=add_ast_parent_nodes
-            )
+            str_contents, parsed_ast = parse_python_file(contents, source, auto_dedent=auto_dedent)
         except SyntaxError as ex:
             yield ReadError(str(source), ex)
             continue
@@ -150,13 +141,16 @@ def search_python_files(
             continue
 
         for element in iterator:
+            if not isinstance(element, _Element):
+                # Most likely an _ElementUnicodeResult, the result of a query that terminated in
+                # an attribute rather than a node. We have no way of getting from here to
+                # something representing an AST node.
+                yield NonElementReturned(element)
+
             ast_node = node_mappings.get(element, None)
-            try:
-                position = position_from_xml(element, node_mappings=node_mappings)
-            except NonElementReturned as ex:
-                position = None
-                yield ex
-            if position is not None and ast_node is not None:
-                yield Match(source, file_lines, element, position, ast_node)
+            if ast_node is not None:
+                position = position_from_node(ast_node)
+                if position is not None:
+                    yield Match(source, file_lines, element, position, ast_node)
 
         yield FileFinished(source)

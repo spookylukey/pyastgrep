@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from pyastgrep.context import ContextType
-from pyastgrep.printer import StatementContext, StaticContext, print_results
+from pyastgrep.printer import StaticContext, print_results
 from pyastgrep.search import search_python_files
 
 if hasattr(contextlib, "chdir"):
@@ -59,7 +59,6 @@ def run_print(
                 [Path(p) if isinstance(p, str) else p for p in paths] if paths else [Path(".")],
                 expr,
                 xpath2=xpath2,
-                add_ast_parent_nodes=isinstance(context, StatementContext),
             ),
             stdout=stdout,
             stderr=stderr,
