@@ -102,55 +102,63 @@ def search_python_files(
         respect_global_ignores=respect_global_ignores,
         respect_vcs_ignores=respect_vcs_ignores,
     ):
-        node_mappings: dict[_Element, ast.AST] = {}
-        source: Pathlike
-        auto_dedent = False
-        if isinstance(path, MissingPath):
-            yield path
-            continue
-        elif isinstance(path, Path):
-            source = path
-            try:
-                contents = path.read_bytes()
-            except OSError as ex:
-                yield ReadError(str(path), ex)
-                continue
-        else:
-            source = "<stdin>"
-            contents = path.read()
-            auto_dedent = True
+        yield from search_python_file(path, query_func, expression)
 
+
+def search_python_file(
+    path: Path | BinaryIO | MissingPath,
+    query_func: Callable[[ast.AST, str], Iterable[_Element]],
+    expression: str,
+) -> Generator[Match | MissingPath | ReadError | NonElementReturned | FileFinished, None, None]:
+    node_mappings: dict[_Element, ast.AST] = {}
+    source: Pathlike
+    auto_dedent = False
+    if isinstance(path, MissingPath):
+        yield path
+        return
+    elif isinstance(path, Path):
+        source = path
         try:
-            str_contents, parsed_ast = parse_python_file(contents, source, auto_dedent=auto_dedent)
-        except SyntaxError as ex:
-            yield ReadError(str(source), ex)
-            continue
+            contents = path.read_bytes()
+        except OSError as ex:
+            yield ReadError(str(path), ex)
+            return
+    else:
+        source = "<stdin>"
+        contents = path.read()
+        auto_dedent = True
 
-        file_lines = str_contents.splitlines()
-        xml_ast = ast_to_xml(
-            parsed_ast,
-            node_mappings,
-        )
+    try:
+        str_contents, parsed_ast = parse_python_file(contents, source, auto_dedent=auto_dedent)
+    except SyntaxError as ex:
+        yield ReadError(str(source), ex)
+        return
 
-        matching_elements = query_func(xml_ast, expression)
+    file_lines = str_contents.splitlines()
+    xml_ast = ast_to_xml(
+        parsed_ast,
+        node_mappings,
+    )
 
-        try:
-            iterator = iter(matching_elements)
-        except TypeError:
-            yield NonElementReturned(matching_elements)
-            continue
+    matching_elements = query_func(xml_ast, expression)
 
-        for element in iterator:
-            if not isinstance(element, _Element):
-                # Most likely an _ElementUnicodeResult, the result of a query that terminated in
-                # an attribute rather than a node. We have no way of getting from here to
-                # something representing an AST node.
-                yield NonElementReturned(element)
+    try:
+        iterator = iter(matching_elements)
+    except TypeError:
+        yield NonElementReturned(matching_elements)
+        return
 
-            ast_node = node_mappings.get(element, None)
-            if ast_node is not None:
-                position = position_from_node(ast_node)
-                if position is not None:
-                    yield Match(source, file_lines, element, position, ast_node)
+    for element in iterator:
+        if not isinstance(element, _Element):
+            # Most likely an _ElementUnicodeResult, the result of a query that terminated in
+            # an attribute rather than a node. We have no way of getting from here to
+            # something representing an AST node.
+            yield NonElementReturned(element)
 
-        yield FileFinished(source)
+        ast_node = node_mappings.get(element, None)
+        if ast_node is not None:
+            position = position_from_node(ast_node)
+            if position is not None:
+                yield Match(source, file_lines, element, position, ast_node)
+
+    yield FileFinished(source)
