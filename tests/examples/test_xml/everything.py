@@ -34,3 +34,6 @@ class MyClass:
 def function_ann(a: str, b: bool = False) -> str:
     c: int
     d: list[int] = [1]
+
+
+ß = "☺"

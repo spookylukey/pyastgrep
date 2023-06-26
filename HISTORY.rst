@@ -1,3 +1,8 @@
+Version 1.2.x - unreleased
+--------------------------
+
+* Fixed bug with searching for unicode characters
+
 Version 1.2.1 - 2023-06-22
 --------------------------
 

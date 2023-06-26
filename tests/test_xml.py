@@ -56,6 +56,13 @@ def test_attribute():
     assert output.retval[1] > 0
 
 
+def test_unicode():
+    output = run_print(DIR, './/Name[@id="ß"]')
+    assert "ß" in output.stdout
+    output2 = run_print(DIR, './/Constant[contains(@value, "☺")]')
+    assert "☺" in output2.stdout
+
+
 def _file_to_xml(path: Path):
     _, ast_node = parse_python_file(path.read_bytes(), str(path), auto_dedent=False)
     doc = ast_to_xml(ast_node, {})
@@ -350,6 +357,18 @@ def test_xml_everything():
         </Name>
       </returns>
     </FunctionDef>
+    <Assign lineno="39" col_offset="0">
+      <targets>
+        <Name lineno="39" col_offset="0" type="str" id="&#223;">
+          <ctx>
+            <Store/>
+          </ctx>
+        </Name>
+      </targets>
+      <value>
+        <Constant lineno="39" col_offset="5" type="str" value="&#9786;"/>
+      </value>
+    </Assign>
   </body>
   <type_ignores/>
 </Module>

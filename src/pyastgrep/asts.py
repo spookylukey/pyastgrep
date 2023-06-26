@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import ast
-import codecs
 from functools import partial
 from typing import Callable
 
@@ -14,12 +13,11 @@ def _set_encoded_literal(set_fn: Callable[[str | bytes], None], literal: bool | 
     if isinstance(literal, (bool, int, float)):
         literal = str(literal)
     if literal is None:
-        set_fn("")
-    else:
-        try:
-            set_fn(codecs.encode(literal, "ascii", "xmlcharrefreplace"))
-        except Exception:
-            set_fn("")  # Null byte - failover to empty string
+        literal = ""
+    try:
+        set_fn(literal)
+    except Exception:
+        set_fn("")  # Null byte - failover to empty string
 
 
 def ast_to_xml(
