@@ -25,11 +25,16 @@ def _set_encoded_literal(set_fn: Callable[[str | bytes], None], literal: bool | 
 def ast_to_xml(
     ast_node: ast.AST,
     node_mappings: dict[_Element, ast.AST],
+    *,
+    parent: _Element | None = None,
 ) -> _Element:
     """Convert supplied AST node to XML.
     Mappings from XML back to AST nodes will be recorded in node_mappings
     """
-    xml_node = etree.Element(ast_node.__class__.__name__)
+    if parent is None:
+        xml_node = etree.Element(ast_node.__class__.__name__)
+    else:
+        xml_node = etree.SubElement(parent, ast_node.__class__.__name__)
     for attr in ("lineno", "col_offset"):
         value = getattr(ast_node, attr, None)
         if value is not None:
@@ -41,22 +46,20 @@ def ast_to_xml(
     for field_name, field_value in node_fields:
         if isinstance(field_value, ast.AST):
             field = etree.SubElement(xml_node, field_name)
-            field.append(
-                ast_to_xml(
-                    field_value,
-                    node_mappings,
-                )
+            ast_to_xml(
+                field_value,
+                node_mappings,
+                parent=field,
             )
 
         elif isinstance(field_value, list):
             field = etree.SubElement(xml_node, field_name)
             for item in field_value:
                 if isinstance(item, ast.AST):
-                    field.append(
-                        ast_to_xml(
-                            item,
-                            node_mappings,
-                        )
+                    ast_to_xml(
+                        item,
+                        node_mappings,
+                        parent=field,
                     )
                 else:
                     subfield = etree.SubElement(field, "item")
