@@ -398,6 +398,18 @@ def test_xml_everything():
         <Constant lineno="39" col_offset="5" type="str" value="&#9786;"/>
       </value>
     </Assign>
+    <Assign lineno="40" col_offset="0">
+      <targets>
+        <Name lineno="40" col_offset="0" type="str" id="myellipsis">
+          <ctx>
+            <Store/>
+          </ctx>
+        </Name>
+      </targets>
+      <value>
+        <Constant lineno="40" col_offset="13" type="ellipsis" value="Ellipsis"/>
+      </value>
+    </Assign>
   </body>
   <type_ignores/>
 </Module>

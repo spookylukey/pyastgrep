@@ -52,9 +52,13 @@ def _encoded_literal(literal: bool | int | bytes | str | None) -> str:
     if isinstance(literal, bytes):
         literal = literal.decode("utf-8", errors="replace")
 
-    # NUL characters and control characters are not allowed in XML. It's better
-    # to be able to search the rest of the string, so we replace
-    return illegal_xml_chars_re.sub("", literal)
+    if isinstance(literal, str):
+        # NUL characters and control characters are not allowed in XML. It's better
+        # to be able to search the rest of the string, so we replace
+        return illegal_xml_chars_re.sub("", literal)
+
+    # Catch other Constants, like Ellipsis
+    return repr(literal)
 
 
 def ast_to_xml(

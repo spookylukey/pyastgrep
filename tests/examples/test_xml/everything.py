@@ -37,3 +37,4 @@ def function_ann(a: str, b: bool = False) -> str:
 
 
 ß = "☺"
+myellipsis = ...
