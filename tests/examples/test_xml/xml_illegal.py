@@ -1,0 +1,5 @@
+NUL = "\x00"
+NULPLUSAB = "\x00AB"
+NULPLUSABb = b"\x00AB"
+CTL = "\x0c"
+CTLB = b"\x0c"

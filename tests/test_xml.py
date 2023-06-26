@@ -63,6 +63,35 @@ def test_unicode():
     assert "☺" in output2.stdout
 
 
+def test_bytes():
+    output = run_print(DIR, './/Constant[@type="bytes"]', ["bytes.py"])
+    assert (
+        output.stdout
+        == """
+bytes.py:1:11:MYBYTES = b"hello"
+""".lstrip()
+    )
+
+    output2 = run_print(DIR, './/Constant[@value="hello"]', ["bytes.py"])
+    assert (
+        output2.stdout
+        == """
+bytes.py:1:11:MYBYTES = b"hello"
+""".lstrip()
+    )
+
+
+def test_illegal_chars():
+    output = run_print(DIR, './/Constant[contains(@value, "AB")]', ["xml_illegal.py"])
+    assert (
+        output.stdout
+        == """
+xml_illegal.py:2:13:NULPLUSAB = "\\x00AB"
+xml_illegal.py:3:14:NULPLUSABb = b"\\x00AB"
+""".lstrip()
+    )
+
+
 def _file_to_xml(path: Path):
     _, ast_node = parse_python_file(path.read_bytes(), str(path), auto_dedent=False)
     doc = ast_to_xml(ast_node, {})

@@ -1,0 +1,1 @@
+MYBYTES = b"hello"

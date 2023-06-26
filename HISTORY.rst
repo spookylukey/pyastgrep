@@ -2,6 +2,7 @@ Version 1.2.x - unreleased
 --------------------------
 
 * Fixed bug with searching for unicode characters
+* Fixed various bugs handling illegal XML characters and byte literals
 
 Version 1.2.1 - 2023-06-22
 --------------------------
