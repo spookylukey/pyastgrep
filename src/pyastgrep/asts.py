@@ -4,8 +4,6 @@ from __future__ import annotations
 import ast
 import re
 import sys
-from functools import partial
-from typing import Callable
 
 from lxml import etree
 from lxml.etree import _Element
@@ -46,17 +44,17 @@ xml_illegal_character_regex = "[" + "".join(illegal_ranges) + "]"
 illegal_xml_chars_re = re.compile(xml_illegal_character_regex)
 
 
-def _set_encoded_literal(set_fn: Callable[[str | bytes], None], literal: bool | int | bytes | str | None) -> None:
+def _encoded_literal(literal: bool | int | bytes | str | None) -> str:
     if isinstance(literal, (bool, int, float)):
-        literal = str(literal)
+        return str(literal)
     if literal is None:
-        literal = ""
+        return ""
     if isinstance(literal, bytes):
         literal = literal.decode("utf-8", errors="replace")
 
     # NUL characters and control characters are not allowed in XML. It's better
     # to be able to search the rest of the string, so we replace
-    set_fn(illegal_xml_chars_re.sub("", literal))
+    return illegal_xml_chars_re.sub("", literal)
 
 
 def ast_to_xml(
@@ -75,7 +73,7 @@ def ast_to_xml(
     for attr in ("lineno", "col_offset"):
         value = getattr(ast_node, attr, None)
         if value is not None:
-            _set_encoded_literal(partial(xml_node.set, attr), value)
+            xml_node.set(attr, _encoded_literal(value))
     node_mappings[xml_node] = ast_node
 
     node_fields = zip(ast_node._fields, (getattr(ast_node, attr) for attr in ast_node._fields))
@@ -100,13 +98,13 @@ def ast_to_xml(
                     )
                 else:
                     subfield = etree.SubElement(field, "item")
-                    _set_encoded_literal(partial(setattr, subfield, "text"), item)
+                    subfield.text = _encoded_literal(item)
 
         elif field_value is not None:
             # add type attribute e.g. so we can distinguish strings from numbers etc
             # in older Python (< 3.8) type could be identified by Str vs Num and s vs n etc
             # e.g. <Constant lineno="1" col_offset="6" type="int" value="1"/>
-            _set_encoded_literal(partial(xml_node.set, "type"), type(field_value).__name__)
-            _set_encoded_literal(partial(xml_node.set, field_name), field_value)
+            xml_node.set("type", _encoded_literal(type(field_value).__name__))
+            xml_node.set(field_name, _encoded_literal(field_value))
 
     return xml_node
