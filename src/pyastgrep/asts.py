@@ -16,7 +16,7 @@ def _set_encoded_literal(set_fn: Callable[[str | bytes], None], literal: bool | 
         literal = ""
     try:
         set_fn(literal)
-    except Exception:
+    except ValueError:
         set_fn("")  # Null byte - failover to empty string
 
 
