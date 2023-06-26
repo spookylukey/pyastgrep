@@ -57,7 +57,7 @@ class FileFinished:
     Sentinel used for flushing output
     """
 
-    path: Pathlike
+    source: Path | BinaryIO
 
 
 def position_from_node(node: ast.AST) -> Position | None:
@@ -102,21 +102,22 @@ def search_python_files(
         respect_global_ignores=respect_global_ignores,
         respect_vcs_ignores=respect_vcs_ignores,
     ):
-        yield from search_python_file(path, query_func, expression)
+        if isinstance(path, MissingPath):
+            yield path
+        else:
+            yield from search_python_file(path, query_func, expression)
+            yield FileFinished(path)
 
 
 def search_python_file(
-    path: Path | BinaryIO | MissingPath,
+    path: Path | BinaryIO,
     query_func: Callable[[ast.AST, str], Iterable[_Element]],
     expression: str,
-) -> Generator[Match | MissingPath | ReadError | NonElementReturned | FileFinished, None, None]:
+) -> Generator[Match | ReadError | NonElementReturned, None, None]:
     node_mappings: dict[_Element, ast.AST] = {}
     source: Pathlike
     auto_dedent = False
-    if isinstance(path, MissingPath):
-        yield path
-        return
-    elif isinstance(path, Path):
+    if isinstance(path, Path):
         source = path
         try:
             contents = path.read_bytes()
@@ -160,5 +161,3 @@ def search_python_file(
             position = position_from_node(ast_node)
             if position is not None:
                 yield Match(source, file_lines, element, position, ast_node)
-
-    yield FileFinished(source)
