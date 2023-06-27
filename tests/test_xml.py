@@ -82,12 +82,15 @@ bytes.py:1:11:MYBYTES = b"hello"
 
 
 def test_illegal_chars():
+    # We have to strip the chars that are illegal in XML, but we should
+    # not crash and we should still match on other parts of the string.
     output = run_print(DIR, './/Constant[contains(@value, "AB")]', ["xml_illegal.py"])
     assert (
         output.stdout
         == """
 xml_illegal.py:2:13:NULPLUSAB = "\\x00AB"
 xml_illegal.py:3:14:NULPLUSABb = b"\\x00AB"
+xml_illegal.py:6:13:SURROGATE = "AB\\ud800"
 """.lstrip()
     )
 

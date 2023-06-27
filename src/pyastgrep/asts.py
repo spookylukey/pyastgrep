@@ -54,8 +54,9 @@ def _encoded_literal(literal: bool | int | bytes | str | None) -> str:
 
     if isinstance(literal, str):
         # NUL characters and control characters are not allowed in XML. It's better
-        # to be able to search the rest of the string, so we replace
-        return illegal_xml_chars_re.sub("", literal)
+        # to be able to search the rest of the string, so we replace.
+        # We also need to purge surrogates and anything else that is not UTF-8 encodable
+        return illegal_xml_chars_re.sub("", literal).encode("utf-8", "replace").decode("utf-8")
 
     # Catch other Constants, like Ellipsis
     return repr(literal)
