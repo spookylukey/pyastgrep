@@ -355,6 +355,13 @@ equal to ``"foo"``:
 
    $ pyastgrep './/Assign[./targets//Name[@id="foo"]]' --xml
 
+Bugs
+----
+
+Due to limitations in what characters can be stored in an XML document, null
+bytes (``\x00``) and other characters such as escape codes in string and byte
+literals get stripped, and can’t be searched for.
+
 Limitations and other tools
 ---------------------------
 
