@@ -4,18 +4,6 @@ repos:
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - flake8-future-annotations
-        language_version: python3.10
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
-    hooks:
-      - id: isort
-        language_version: python3.10
   - repo: https://github.com/ikamensh/flynt/
     rev: '0.76'
     hooks:
@@ -27,17 +15,11 @@ repos:
       - id: pyupgrade
         entry: pyupgrade --py3-plus --py36-plus --py37-plus --py38-plus
         language_version: python3.10
-  - repo: https://github.com/myint/autoflake
-    rev: 'v1.4'
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.277
     hooks:
-      - id: autoflake
-        args: ['--remove-all-unused-imports', '-i']
-        language_version: python3.10
-  - repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: 'v1.5.7'
-    hooks:
-      - id: autopep8
-        language_version: python3.10
+      - id: ruff
+        args: [ --fix, --exit-non-zero-on-fix ]
   - repo: https://github.com/psf/black
     rev: 22.3.0
     hooks:

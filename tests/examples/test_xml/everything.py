@@ -1,4 +1,4 @@
-# flake8:noqa
+# ruff: noqa
 def function(arg):
     """Docstring"""
     assigned_string = "string_literal"
