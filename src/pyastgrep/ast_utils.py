@@ -14,6 +14,9 @@ diff -u <(python3.10 -c 'import ast; print("\n".join(sorted(dir(ast))))') \
 """
 
 
+# BLOCK_AST and STATEMENT_AST together are based on the 'stmt' rule in the
+# Python grammar, plus others that have `body` attributes like Module and
+# ExceptHandler. BLOCK_AST are the ones that have a 'body' attribute.
 BLOCK_AST = tuple(
     i
     for i in [
@@ -29,6 +32,7 @@ BLOCK_AST = tuple(
         ast.Try,
         getattr(ast, "TryStar", None),
         getattr(ast, "match_case", None),
+        ast.ExceptHandler,
     ]
     if i
 )
