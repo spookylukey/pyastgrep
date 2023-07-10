@@ -81,7 +81,7 @@ def parse_python_file(contents: bytes, filename: str | Path, *, auto_dedent: boo
         contents = auto_dedent_code(contents)
 
     parsed_ast: ast.AST = ast.parse(contents, str(filename))
-    # Needed for StatementContext and for position_from_node
+    # Need `parent` backlinks for StatementContext and for position_from_node:
     for node in ast.walk(parsed_ast):
         for child in ast.iter_child_nodes(node):
             child.parent = node  # type: ignore
