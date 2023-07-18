@@ -7,15 +7,16 @@ import typing
 from dataclasses import dataclass
 from pathlib import Path
 
-from pyastgrep.context import ContextType
-from pyastgrep.printer import StaticContext, print_results
+from pyastgrep.color import Colorer
+from pyastgrep.context import ContextType, StaticContext
+from pyastgrep.printer import print_results
 from pyastgrep.search import search_python_files
 
 if hasattr(contextlib, "chdir"):
-    chdir = contextlib.chdir  # type: ignore[attr-defined]
+    chdir = contextlib.chdir
 else:
     # Python < 3.11
-    class chdir(contextlib.AbstractContextManager):  # type: ignore[no-redef]
+    class chdir(contextlib.AbstractContextManager):  # type: ignore[type-arg,no-redef]
         """Non thread-safe context manager to change the current working directory."""
 
         def __init__(self, path: str | Path):
@@ -45,6 +46,7 @@ def run_print(
     print_xml: bool = False,
     context: ContextType = StaticContext(before=0, after=0),
     heading=False,
+    colorer: Colorer | None = None,
 ) -> Output:
     # As much as possible, we're avoiding capsys or other techniques that
     # capture stdin/out, because they interacts badly with trying to do REPL
@@ -65,5 +67,6 @@ def run_print(
             print_xml=print_xml,
             context=context,
             heading=heading,
+            colorer=colorer,
         )
     return Output(stdout=stdout.getvalue(), stderr=stderr.getvalue(), retval=retval)

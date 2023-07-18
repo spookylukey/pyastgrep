@@ -16,7 +16,9 @@ from typing import BinaryIO
 from lxml.etree import XPathEvalError
 
 from . import __version__
-from .printer import StatementContext, StaticContext, print_results
+from .color import Colorer, NullColorer, UseColor, make_default_colorer
+from .context import StatementContext, StaticContext
+from .printer import print_results
 from .search import search_python_files
 
 NAME_AND_VERSION = "pyastgrep " + __version__
@@ -75,9 +77,21 @@ You can also use '--context=statement' to print the complete statement of a matc
 When combined with --heading, this has some extra behaviour:
   - code is automatically dedented
   - multiple matches within the same statement won't be printed twice.
+  - matches are not colored
     """,
     type=context_parameter,
     default=0,
+)
+parser.add_argument(
+    "--color",
+    help="""Controls when to use colors. Possible values are:
+    never    Colors will never be used.
+    auto     Use colors if a terminal is detected as the output (default)
+    always   Colors will always be used regardless of where output is sent.
+    """,
+    type=UseColor,
+    default=UseColor.AUTO,
+    choices=list(UseColor),
 )
 parser.add_argument(
     "--css",
@@ -192,6 +206,18 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
             print(f"Invalid CSS selector: {expr}", file=sys.stderr)
             return ERROR
 
+    colorer: Colorer
+    color: UseColor = args.color
+    if color == UseColor.AUTO:
+        if sys.stdout.isatty():
+            colorer = make_default_colorer()
+        else:
+            colorer = NullColorer()
+    elif color == UseColor.NEVER:
+        colorer = NullColorer()
+    elif color == UseColor.ALWAYS:
+        colorer = make_default_colorer()
+
     try:
         matches, errors = print_results(
             search_python_files(
@@ -207,6 +233,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
             quiet=args.quiet,
             context=context,
             heading=args.heading,
+            colorer=colorer,
         )
     except XPathEvalError:
         print(f"Invalid XPath expression: {expr}", file=sys.stderr)

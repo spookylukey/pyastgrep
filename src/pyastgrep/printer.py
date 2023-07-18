@@ -5,8 +5,10 @@ import textwrap
 from typing import Callable, Iterable, Protocol, TextIO
 
 from . import xml
+from .color import Colorer, NullColorer
 from .context import ContextType, StatementContext, StaticContext
-from .search import FileFinished, Match, MissingPath, NonElementReturned, Pathlike, ReadError
+from .files import MissingPath
+from .search import FileFinished, Match, NonElementReturned, Pathlike, ReadError
 
 
 class Formatter(Protocol):
@@ -40,6 +42,7 @@ def print_results(
     stderr: TextIO | None = None,
     quiet: bool = False,
     heading: bool = False,
+    colorer: Colorer | None = None,
 ) -> tuple[int, int]:
     if print_ast:
         # Don't import unless needed
@@ -49,6 +52,8 @@ def print_results(
         stdout = sys.stdout
     if stderr is None:
         stderr = sys.stderr
+    if colorer is None:
+        colorer = NullColorer()
     matches = 0
     errors = 0
 
@@ -63,14 +68,16 @@ def print_results(
     context_handler: ContextHandler
     if heading:
         if isinstance(context, StatementContext):
-            context_handler = StatementWithHeadingContextHandler(line_printer=line_printer)
+            context_handler = StatementWithHeadingContextHandler(
+                line_printer=line_printer, formatter=HeadingFormatter(colorer=colorer)
+            )
         else:
             context_handler = DefaultContextHandler(
-                context_type=context, line_printer=line_printer, formatter=HeadingFormatter()
+                context_type=context, line_printer=line_printer, formatter=HeadingFormatter(colorer=colorer)
             )
     else:
         context_handler = DefaultContextHandler(
-            context_type=context, line_printer=line_printer, formatter=DefaultFormatter()
+            context_type=context, line_printer=line_printer, formatter=DefaultFormatter(colorer=colorer)
         )
 
     for result in results:
@@ -220,10 +227,10 @@ class StatementWithHeadingContextHandler:
     # For cases of overlapping or nested matches, we don't print the same lines
     # multiple times.
 
-    def __init__(self, *, line_printer: LinePrinter):
+    def __init__(self, *, line_printer: LinePrinter, formatter: Formatter):
         # Configuration from outside:
         self.line_printer = line_printer
-        self.formatter = HeadingFormatter()
+        self.formatter = formatter
         self.context_type = StatementContext()
 
         # Managed state:
@@ -261,19 +268,30 @@ class StatementWithHeadingContextHandler:
 
 
 class DefaultFormatter:
+    def __init__(self, colorer: Colorer):
+        self.colorer = colorer
+
     # Same formatting as ripgrep:
     def format_header(self, path: Pathlike, context_line_index: int) -> str | None:
         return None
 
     def format_context_line(self, result: Match, context_line: str, context_line_index: int) -> str:
-        return f"{result.path}-{context_line_index + 1}-{context_line}"
+        c = self.colorer
+        path_s = c.color_path(str(result.path))
+        lineno_s = c.color_lineno(context_line_index + 1)
+        return f"{path_s}-{lineno_s}-{context_line}"
 
     def format_match_line(self, result: Match) -> str:
-        return f"{result.path}:{result.position.lineno}:{result.position.col_offset + 1}:{result.matching_line}"
+        c = self.colorer
+        path_s = c.color_path(str(result.path))
+        lineno_s = c.color_lineno(result.position.lineno)
+        match_s = c.color_match(result)
+        return f"{path_s}:{lineno_s}:{result.position.col_offset + 1}:{match_s}"
 
 
 class HeadingFormatter:
-    def __init__(self) -> None:
+    def __init__(self, colorer: Colorer):
+        self.colorer = colorer
         self.first_result_printed = False
 
     def format_header(self, path: Pathlike, context_line_index: int) -> str | None:
@@ -283,10 +301,13 @@ class HeadingFormatter:
         # Gap between results, for all but very first
         spacer = "\n" if self.first_result_printed else ""
         self.first_result_printed = True
-        return spacer + f"# {path}:{context_line_index + 1}:"
+        c = self.colorer
+        path_s = c.color_path(str(path))
+        lineno_s = c.color_lineno(context_line_index + 1)
+        return spacer + f"# {path_s}:{lineno_s}:"
 
     def format_context_line(self, result: Match, context_line: str, context_line_index: int) -> str:
         return context_line
 
     def format_match_line(self, result: Match) -> str:
-        return result.matching_line
+        return self.colorer.color_match(result)

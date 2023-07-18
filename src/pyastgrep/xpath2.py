@@ -6,4 +6,4 @@ from lxml.etree import _Element, _ElementUnicodeResult
 
 
 def elementpath_query(element: _Element, expression: str) -> list[_Element | _ElementUnicodeResult]:
-    return elementpath.select(element, expression)
+    return elementpath.select(element, expression)  # type: ignore[no-any-return]

@@ -2,7 +2,8 @@ import io
 from pathlib import Path
 
 import pytest
-from pyastgrep.printer import StatementContext, StaticContext
+from pyastgrep.color import Colors, Styles, make_default_colorer
+from pyastgrep.context import StatementContext, StaticContext
 
 from tests.utils import run_print
 
@@ -285,4 +286,39 @@ out_of_order.py:5:17:def function(arg=2):
 out_of_order.py:6:5:    3
 out_of_order.py-7-
 """.lstrip()
+    )
+
+
+def test_coloring():
+    output = run_print(
+        DIR, ".//arg", ["colors.py"], context=StaticContext(before=0, after=0), colorer=make_default_colorer()
+    ).stdout
+    assert output == (
+        f"{Colors.MAGENTA}colors.py{Styles.END}:{Colors.GREEN}1{Styles.END}:9:"
+        f"def foo({Colors.RED}{Styles.BOLD}arg1{Styles.END}, arg2):\n"
+        f"{Colors.MAGENTA}colors.py{Styles.END}:{Colors.GREEN}1{Styles.END}:15:"
+        f"def foo(arg1, {Colors.RED}{Styles.BOLD}arg2{Styles.END}):\n"
+    )
+
+
+def test_coloring_function_def():
+    # See comment in AnsiColorer.color_match
+    output = run_print(
+        DIR, ".//FunctionDef", ["colors.py"], context=StaticContext(before=0, after=0), colorer=make_default_colorer()
+    ).stdout
+    assert output == (f"{Colors.MAGENTA}colors.py{Styles.END}:{Colors.GREEN}1{Styles.END}:1:def foo(arg1, arg2):\n")
+
+
+def test_coloring_heading():
+    output = run_print(
+        DIR,
+        ".//arg[@arg='arg1']",
+        ["colors.py"],
+        context=StaticContext(before=0, after=0),
+        colorer=make_default_colorer(),
+        heading=True,
+    ).stdout
+    assert output == (
+        f"# {Colors.MAGENTA}colors.py{Styles.END}:{Colors.GREEN}1{Styles.END}:\n"
+        f"def foo({Colors.RED}{Styles.BOLD}arg1{Styles.END}, arg2):\n"
     )
