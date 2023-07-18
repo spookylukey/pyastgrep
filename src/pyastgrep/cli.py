@@ -26,6 +26,7 @@ parser = argparse.ArgumentParser(
     prog=NAME_AND_VERSION,
     description="Grep Python files uses XPath expressions against the AST",
     formatter_class=argparse.RawTextHelpFormatter,
+    add_help=False,
 )
 
 
@@ -38,45 +39,60 @@ def context_parameter(param: str) -> int | StatementContext:
 # Names of arguments:
 #
 # We try to match names from ripgrep where the behaviour is basically the same
-parser.add_argument("--version", action="version", version=NAME_AND_VERSION + f", Python {sys.version}")
+parser.add_argument(
+    "-h",
+    "--help",
+    action="help",
+    help="Show this help message and exit\n\n",
+)
+parser.add_argument(
+    "--version",
+    action="version",
+    version=NAME_AND_VERSION + f", Python {sys.version}",
+    help="Show program's version number and exit\n\n",
+)
 parser.add_argument(
     "-q",
     "--quiet",
-    help="Hide output of matches",
+    help="Hide output of matches\n\n",
     action="store_true",
 )
 parser.add_argument(
     "--ast",
-    help="Pretty-print the matching AST objects",
+    help="Pretty-print the matching AST objects\n\n",
     action="store_true",
 )
 parser.add_argument(
     "--xml",
-    help="Pretty-print the matching XML elements",
+    help="Pretty-print the matching XML elements\n\n",
     action="store_true",
 )
 parser.add_argument(
     "-A",
     "--after-context",
-    help="Lines of context to display after matching line",
+    help="Lines of context to display after matching line\n\n",
     type=int,
     default=0,
 )
 parser.add_argument(
     "-B",
     "--before-context",
-    help="Lines of context to display after matching line",
+    help="Lines of context to display after matching line\n\n",
     type=int,
     default=0,
 )
 parser.add_argument(
     "-C",
     "--context",
-    help="""Lines of context to display before and after matching line, as an integer.
-You can also use '--context=statement' to print the complete statement of a match.
-When combined with --heading, this has some extra behaviour:
+    help="""Lines of context to display before and after matching
+line, as an integer.
+
+You can also use '--context=statement' to print the
+complete statement of a match. When combined with
+--heading, this has some extra behaviour:
   - code is automatically dedented
-  - multiple matches within the same statement won't be printed twice.
+  - multiple matches within the same statement won't be
+    printed twice.
   - matches are not colored
     """,
     type=context_parameter,
@@ -86,8 +102,10 @@ parser.add_argument(
     "--color",
     help="""Controls when to use colors. Possible values are:
     never    Colors will never be used.
-    auto     Use colors if a terminal is detected as the output (default)
-    always   Colors will always be used regardless of where output is sent.
+    auto     Use colors if a terminal is detected as the
+             output (default)
+    always   Colors will always be used regardless of
+             where output is sent.
     """,
     type=UseColor,
     default=UseColor.AUTO,
@@ -95,60 +113,72 @@ parser.add_argument(
 )
 parser.add_argument(
     "--css",
-    help="Interpret expression as a CSS selector",
+    help="Interpret expression as a CSS selector\n\n",
     action="store_true",
 )
 parser.add_argument(
     "--xpath2",
-    help="""Use XPath 2.0 functions and selectors. This currently makes matching
-significantly slower, and re:match and re:search functions are not supported""",
+    help="""Use XPath 2.0 functions and selectors. This currently
+makes matching significantly slower, and re:match and
+re:search functions are not supported
+    """,
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "--heading",
-    help="""Print the file path and line number as a heading (formatted as a Python
-comment) above the results.""",
+    help="""Print the file path and line number as a heading
+(formatted as a Python comment) above the results.
+    """,
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "-.",
     "--hidden",
-    help="""Search hidden files and directories, which are skipped by default.
-A file or directory is considered hidden if its base name starts with
-a dot character ('.').""",
+    help="""Search hidden files and directories, which are skipped
+by default. A file or directory is considered hidden if
+its base name starts with a dot character ('.').
+    """,
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "--no-ignore-global",
-    help="""Don't respect ignore files that come from \"global\" sources such as
-git's `core.excludesFile` configuration option, which is typically
-~/.config/git/ignore or ~/.gitignore""",
+    help="""Don't respect ignore files that come from \"global\"
+sources such as git's `core.excludesFile` configuration
+option, which is typically ~/.config/git/ignore or
+~/.gitignore
+    """,
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "--no-ignore-vcs",
-    help="Don't respect version control ignore files (.gitignore, etc.). ",
+    help="""Don't respect version control ignore files such as
+.gitignore
+    """,
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "--debug",
-    help="Print debugging information, especially for why files are skipped",
+    help="""Print debugging information, especially for why files
+are skipped
+    """,
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "expr",
-    help="XPath search expression",
+    help="XPath search expression\n\n",
 )
 parser.add_argument(
     "path",
-    help="""Zero or more files or directory to search. Search defaults to current directory if omitted.
-Use - for stdin""",
+    help="""Zero or more files or directory to search. Search
+defaults to current directory if omitted.
+Use - for stdin
+    """,
     nargs="*",
 )
 
