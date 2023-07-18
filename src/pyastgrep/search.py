@@ -4,7 +4,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, BinaryIO, Callable, Generator, Iterable, Sequence
+from typing import BinaryIO, Callable, Generator, Iterable, Literal, Sequence, Union
 
 from lxml.etree import _Element
 
@@ -12,14 +12,7 @@ from . import xml
 from .asts import ast_to_xml
 from .files import MissingPath, get_files_to_search, parse_python_file
 
-if TYPE_CHECKING:
-    from typing import Literal
-
-    Pathlike = Path | Literal["<stdin>"]
-else:
-    # `|` not supported on older Python versions we support,
-    # and Literal is only available in Python 3.8+
-    Pathlike = Path
+Pathlike = Union[Path, Literal["<stdin>"]]
 
 
 @dataclass(frozen=True)
