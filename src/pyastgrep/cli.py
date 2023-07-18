@@ -23,6 +23,7 @@ NAME_AND_VERSION = "pyastgrep " + __version__
 parser = argparse.ArgumentParser(
     prog=NAME_AND_VERSION,
     description="Grep Python files uses XPath expressions against the AST",
+    formatter_class=argparse.RawTextHelpFormatter,
 )
 
 
@@ -69,11 +70,12 @@ parser.add_argument(
 parser.add_argument(
     "-C",
     "--context",
-    help="Lines of context to display before and after matching line, as an integer. "
-    "You can also use '--context=statement' to print the complete statement of a given match. "
-    "When combined with --heading, this has some extra behaviour:"
-    " code is automatically dedented;"
-    " multiple matches within the same statement won't be printed twice.",
+    help="""Lines of context to display before and after matching line, as an integer.
+You can also use '--context=statement' to print the complete statement of a match.
+When combined with --heading, this has some extra behaviour:
+  - code is automatically dedented
+  - multiple matches within the same statement won't be printed twice.
+    """,
     type=context_parameter,
     default=0,
 )
@@ -84,29 +86,32 @@ parser.add_argument(
 )
 parser.add_argument(
     "--xpath2",
-    help="Use XPath 2.0 functions and selectors. This currently makes matching significantly slower, "
-    "and re:match and re:search functions are not supported",
+    help="""Use XPath 2.0 functions and selectors. This currently makes matching
+significantly slower, and re:match and re:search functions are not supported""",
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "--heading",
-    help="Print the file path and line number as a heading (formatted as a Python comment) above the results.",
+    help="""Print the file path and line number as a heading (formatted as a Python
+comment) above the results.""",
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "-.",
     "--hidden",
-    help="Search hidden files and directories, which are skipped by default. A file "
-    "or directory is considered hidden if its base name starts with a dot character ('.').",
+    help="""Search hidden files and directories, which are skipped by default.
+A file or directory is considered hidden if its base name starts with
+a dot character ('.').""",
     action="store_true",
     default=False,
 )
 parser.add_argument(
     "--no-ignore-global",
-    help="Don't respect ignore files that come from \"global\" sources such as git's "
-    "`core.excludesFile` configuration option (typically ~/.config/git/ignore` or ~/.gitignore)).",
+    help="""Don't respect ignore files that come from \"global\" sources such as
+git's `core.excludesFile` configuration option, which is typically
+~/.config/git/ignore or ~/.gitignore""",
     action="store_true",
     default=False,
 )
@@ -128,7 +133,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "path",
-    help="Zero or more files or directory to search. Search defaults to current directory if omitted. Use - for stdin",
+    help="""Zero or more files or directory to search. Search defaults to current directory if omitted.
+Use - for stdin""",
     nargs="*",
 )
 
