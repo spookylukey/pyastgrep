@@ -15,9 +15,9 @@ from typing import BinaryIO
 
 from lxml.etree import XPathEvalError
 
-from pyastgrep import __version__
-from pyastgrep.printer import StatementContext, StaticContext, print_results
-from pyastgrep.search import search_python_files
+from . import __version__
+from .printer import StatementContext, StaticContext, print_results
+from .search import search_python_files
 
 NAME_AND_VERSION = "pyastgrep " + __version__
 parser = argparse.ArgumentParser(

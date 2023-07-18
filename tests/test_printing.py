@@ -2,8 +2,8 @@ import io
 from pathlib import Path
 
 import pytest
-
 from pyastgrep.printer import StatementContext, StaticContext
+
 from tests.utils import run_print
 
 DIR = Path(__file__).parent / "examples" / "test_printing"

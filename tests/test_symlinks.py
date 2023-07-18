@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pyastgrep.files import get_files_to_search
+
 from tests.utils import chdir
 
 DIR = Path(__file__).resolve().parent / "examples" / "test_symlinks"

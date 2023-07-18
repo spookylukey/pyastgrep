@@ -5,8 +5,8 @@ import subprocess
 from pathlib import Path
 
 import pytest
-
 from pyastgrep.cli import main
+
 from tests.utils import chdir
 
 DIR = Path(__file__).parent / "examples" / "test_cli"

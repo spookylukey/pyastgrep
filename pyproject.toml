@@ -12,8 +12,8 @@ multi_line_output = 3
 
 [tool.ruff]
 line-length = 120
-target-version = 'py310'
-select = ["E", "F", "I"]
+target-version = 'py38'
+select = ["E", "F", "I", "UP", "FLY"]
 
 
 [tool.mypy]

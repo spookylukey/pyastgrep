@@ -3,9 +3,9 @@ from pathlib import Path
 
 import lxml.etree
 import pytest
-
 from pyastgrep.asts import ast_to_xml
 from pyastgrep.files import parse_python_file
+
 from tests.utils import run_print
 
 DIR = Path(__file__).parent / "examples" / "test_xml"

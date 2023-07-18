@@ -2,6 +2,7 @@ import io
 from pathlib import Path
 
 from pyastgrep.files import get_encoding
+
 from tests.utils import run_print
 
 DIR = Path(__file__).parent / "examples" / "test_encodings"

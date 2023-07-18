@@ -1,11 +1,11 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from pathspec.gitignore import GitIgnoreSpec
-
 import pyastgrep.ignores
+from pathspec.gitignore import GitIgnoreSpec
 from pyastgrep.files import get_files_to_search
 from pyastgrep.ignores import DirectoryPathSpec, find_gitignore_files
+
 from tests.utils import chdir, run_print
 
 DIR = Path(__file__).resolve().parent / "examples" / "test_ignores"
