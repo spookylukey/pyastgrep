@@ -16,7 +16,8 @@ class UseColor(StrEnum):
     AUTO = "auto"
     ALWAYS = "always"
 
-    # ANSI - not implemented, we support only ANSI
+    # ANSI - not implemented, we support only ANSI at the moment,
+    # we'd need someone to implement and test Windows color escaping
 
 
 # https://stackoverflow.com/a/33206814/182604
@@ -64,13 +65,12 @@ class AnsiColorer:
         self.path_color = "".join(path_colors)
         self.lineno_color = "".join(lineno_colors)
         self.match_color = "".join(match_colors)
-        self.end_color = Styles.END
 
     def color_path(self, path: str) -> str:
-        return f"{self.path_color}{path}{self.end_color}"
+        return f"{self.path_color}{path}{Styles.END}"
 
     def color_lineno(self, lineno: int) -> str:
-        return f"{self.lineno_color}{lineno}{self.end_color}"
+        return f"{self.lineno_color}{lineno}{Styles.END}"
 
     def color_match(self, match: Match) -> str:
         # A match could be an AST node as big as a function or class. In this
@@ -87,7 +87,7 @@ class AnsiColorer:
             before = raw_line[0 : ast_node.col_offset]
             matched = raw_line[ast_node.col_offset : ast_node.end_col_offset]
             after = raw_line[ast_node.end_col_offset :]
-            return f"{before}{self.match_color}{matched}{self.end_color}{after}"
+            return f"{before}{self.match_color}{matched}{Styles.END}{after}"
 
         else:
             return match.matching_line

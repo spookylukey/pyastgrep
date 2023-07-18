@@ -172,7 +172,7 @@ class DefaultContextHandler:
         self.printed_context_lines.add((result.path, line_index))
 
     def maybe_print_header(self, path: Pathlike, line_index: int) -> None:
-        # We print a the header only if there is a gap
+        # We print the header only if there is a gap
         if (path, line_index - 1) not in self.printed_context_lines:
             header = self.formatter.format_header(path, line_index)
             if header is not None:
@@ -286,7 +286,8 @@ class DefaultFormatter:
         path_s = c.color_path(str(result.path))
         lineno_s = c.color_lineno(result.position.lineno)
         match_s = c.color_match(result)
-        return f"{path_s}:{lineno_s}:{result.position.col_offset + 1}:{match_s}"
+        colum = result.position.col_offset + 1
+        return f"{path_s}:{lineno_s}:{colum}:{match_s}"
 
 
 class HeadingFormatter:
