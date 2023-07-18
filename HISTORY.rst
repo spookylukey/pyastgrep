@@ -1,3 +1,9 @@
+Version 1.3 - 2023-07-18
+------------------------
+
+* Added color, enabled by default, see ``--color`` flag.
+
+
 Version 1.2.2 - 2023-06-27
 --------------------------
 
