@@ -40,6 +40,30 @@ You can also use pip:
 
    pip install pyastgrep
 
+
+Basic usage
+-----------
+
+::
+
+    pyastgrep <xpath expression> [files or directories]
+
+
+See ``pyastgrep --help`` for more options.
+
+
+pyastgrep in action
+-------------------
+
+Here is an example showing everywhere in the ``pyastgrep`` code base that uses a
+variable whose name contains ``idx``:
+
+.. image:: https://raw.githubusercontent.com/spookylukey/pyastgrep/master/pyastgrep_screenshot.png
+   :align: center
+   :width: 800
+   :alt: Screenshot showing a terminal running ``pyastgrep './/Name[contains(@id, 'idx')]’``
+
+
 Understanding the XML structure
 -------------------------------
 
