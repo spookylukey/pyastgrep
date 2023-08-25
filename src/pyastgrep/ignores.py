@@ -21,7 +21,7 @@ from __future__ import annotations
 import logging
 import subprocess
 from pathlib import Path
-from typing import Any, Generator, Union, overload
+from typing import Any, Iterable, Union, overload
 
 from pathspec import GitIgnoreSpec, PathSpec
 from pathspec.patterns.gitwildmatch import GitWildMatchPattern
@@ -186,7 +186,7 @@ class DirWalker:
             start_directory=directory,
         )
 
-    def walk(self) -> Generator[Path, None, None]:
+    def walk(self) -> Iterable[Path]:
         if self.start_directory is None or self.working_dir is None:
             raise AssertionError("Must use `for_dir` before `walk`")
         for filepath in self.start_directory.glob(self.glob):

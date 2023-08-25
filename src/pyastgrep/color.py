@@ -76,8 +76,8 @@ class AnsiColorer:
         # A match could be an AST node as big as a function or class. In this
         # case:
         # 1) it doesn't make much sense to color it
-        # 2) it would be much harder to color it, because the structure
-        #    of code we've got treats only the first line as the match line,
+        # 2) it would be much harder to color it, because our current
+        #    implementation treats only the first line as the match line,
         #    and later lines are printed as context lines
 
         # So, we only color matches if they start and end on the same line.

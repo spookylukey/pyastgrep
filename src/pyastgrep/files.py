@@ -5,7 +5,7 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO, Generator, Sequence
+from typing import BinaryIO, Iterable, Sequence
 
 from .ignores import DirWalker
 
@@ -20,7 +20,7 @@ def get_files_to_search(
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
-) -> Generator[Path | BinaryIO | MissingPath, None, None]:
+) -> Iterable[Path | BinaryIO | MissingPath]:
     """
     Entry-point function for finding files to search.
 
@@ -94,11 +94,11 @@ def parse_python_file(contents: bytes, filename: str | Path, *, auto_dedent: boo
 
 
 def auto_dedent_code(python_code: bytes) -> bytes:
-    # Can't use textwrap.dedent, it only works on str,
+    # Can't use textwrap.dedent, it only works on str.
 
     # Plus we can have a simpler algo:
-    # - optimizing for the case where this is no whitespace prefix
-    # - bailing out if the first whitespace prefix is
+    # - optimize for the case where there is no whitespace prefix
+    # - bail out if the first whitespace prefix is
     #   longer than others, because this will be invalid Python
     #   code anyway.
 

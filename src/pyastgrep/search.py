@@ -4,7 +4,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO, Callable, Generator, Iterable, Literal, Sequence, Union
+from typing import BinaryIO, Callable, Iterable, Literal, Sequence, Union
 
 from lxml.etree import _Element
 
@@ -79,7 +79,7 @@ def search_python_files(
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
-) -> Generator[Match | MissingPath | ReadError | NonElementReturned | FileFinished, None, None]:
+) -> Iterable[Match | MissingPath | ReadError | NonElementReturned | FileFinished]:
     """
     Perform a recursive search through Python files.
 
@@ -106,7 +106,7 @@ def search_python_file(
     path: Path | BinaryIO,
     query_func: Callable[[ast.AST, str], Iterable[_Element]],
     expression: str,
-) -> Generator[Match | ReadError | NonElementReturned, None, None]:
+) -> Iterable[Match | ReadError | NonElementReturned]:
     node_mappings: dict[_Element, ast.AST] = {}
     source: Pathlike
     auto_dedent = False
