@@ -390,7 +390,18 @@ Bugs
 
 Due to limitations in what characters can be stored in an XML document, null
 bytes (``\x00``) and other characters such as escape codes in string and byte
-literals get stripped, and can’t be searched for.
+literals get stripped, and can’t be searched for. This also means that some
+other string literal searches might return unexpected results because of
+characters being stripped in the XML:
+
+.. code-block:: python
+
+   x = b"A\x00B"
+
+.. code-block:: bash
+
+   $ pyastgrep './/Constant[@value="AB"]'
+   myfile.py:1:5:x = b"A\x00B"
 
 Limitations and other tools
 ---------------------------
