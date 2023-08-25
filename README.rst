@@ -64,6 +64,12 @@ variable whose name contains ``idx``:
    :alt: Screenshot showing a terminal running ``pyastgrep './/Name[contains(@id, 'idx')]’``
 
 
+Some highlights:
+
+- for multiple matches within a line, it prints a separate result for each one.
+- colouring and formatting is the same as ripgrep’s defaults.
+- like ripgrep, it also intelligently ignores files in your ``.gitignore`` etc.
+
 Understanding the XML structure
 -------------------------------
 
@@ -171,7 +177,7 @@ Usages of ``open`` that are **not** in a ``with`` item expression:
 
    pyastgrep './/Call[not(ancestor::withitem)]/func/Name[@id="open"]'
 
-Names longer than 42 characters:
+Names longer than 42 characters, wherever they are used.
 
 .. code:: bash
 
