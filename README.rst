@@ -309,7 +309,7 @@ case-sensitively.
 
 You can also use the online tool `css2xpath <https://css2xpath.github.io/>`_ to
 do translations before passing to ``pyastgrep``. This tool also supports some
-things that our `cssselect (our dependency) does not yet support
+things that cssselect (our dependency) `does not yet support
 <https://github.com/scrapy/cssselect/issues>`_.
 
 Tips
