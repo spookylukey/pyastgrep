@@ -15,6 +15,7 @@ class ContextType(Protocol):
         """
         Return the number lines to use for context as (before, after) tuple
         """
+        ...
 
 
 @dataclass(frozen=True)

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import sys
 from typing import Protocol
 
 from pyastgrep.search import Match
 
-try:
+if sys.version_info >= (3, 11):
     from enum import StrEnum
-except ImportError:
-    from backports.strenum import StrEnum  # type: ignore [no-redef]
+else:
+    from backports.strenum import StrEnum
 
 
 class UseColor(StrEnum):
@@ -40,13 +41,13 @@ class Styles:
 
 class Colorer(Protocol):
     def color_path(self, path: str) -> str:
-        pass
+        ...
 
     def color_lineno(self, lineno: int) -> str:
-        pass
+        ...
 
     def color_match(self, match: Match) -> str:
-        pass
+        ...
 
 
 class NullColorer:

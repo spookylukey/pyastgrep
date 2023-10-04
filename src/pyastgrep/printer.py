@@ -13,13 +13,13 @@ from .search import FileFinished, Match, NonElementReturned, Pathlike, ReadError
 
 class Formatter(Protocol):
     def format_header(self, path: Pathlike, context_line_index: int) -> str | None:
-        pass
+        ...
 
     def format_context_line(self, result: Match, context_line: str, context_line_index: int) -> str:
-        pass
+        ...
 
     def format_match_line(self, result: Match) -> str:
-        pass
+        ...
 
 
 class ContextHandler(Protocol):
