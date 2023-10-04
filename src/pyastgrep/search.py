@@ -128,7 +128,7 @@ def search_python_file(
 
     try:
         str_contents, parsed_ast = parse_python_file(contents, source, auto_dedent=auto_dedent)
-    except SyntaxError as ex:
+    except (SyntaxError, ValueError) as ex:
         yield ReadError(str(source), ex)
         return
 

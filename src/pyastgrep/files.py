@@ -77,6 +77,9 @@ def get_encoding(python_file_bytes: bytes) -> str:
 
 
 def parse_python_file(contents: bytes, filename: str | Path, *, auto_dedent: bool) -> tuple[str, ast.AST]:
+    """
+    Parse Python file and return a tuple of (contents as string, parsed contents)
+    """
     if auto_dedent:
         contents = auto_dedent_code(contents)
 

@@ -10,6 +10,11 @@ def test_broken_syntax():
     assert output.stderr == "broken.py-broken: invalid syntax (broken.py-broken, line 5)\n"
 
 
+def test_null_byte():
+    output = run_print(DIR, "./*/*", ["contains_null.py-broken"])
+    assert output.stderr == "contains_null.py-broken: source code string cannot contain null bytes\n"
+
+
 def test_missing_file():
     output = run_print(DIR, "./*/*", ["missing.py"])
     assert output.stderr == "missing.py: No such file or directory\n"

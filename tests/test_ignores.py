@@ -142,7 +142,8 @@ def test_no_global_git_ignores():
     with patch("pyastgrep.ignores.get_global_gitignore", lambda: Path("/non/existent/.gitignore")):
         assert pyastgrep.ignores.get_global_gitignore() == Path("/non/existent/.gitignore")
         # We should not crash or print any output
-        result = run_print(Path("."), "Name")
+        with chdir(DIR):
+            result = run_print(Path("."), "Name")
         assert not result.stderr
 
 
