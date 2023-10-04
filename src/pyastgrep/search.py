@@ -8,6 +8,8 @@ from typing import BinaryIO, Callable, Iterable, Literal, Sequence, Union
 
 from lxml.etree import _Element
 
+from pyastgrep.ignores import WalkError
+
 from . import xml
 from .asts import ast_to_xml
 from .files import MissingPath, get_files_to_search, parse_python_file
@@ -79,7 +81,7 @@ def search_python_files(
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
-) -> Iterable[Match | MissingPath | ReadError | NonElementReturned | FileFinished]:
+) -> Iterable[Match | MissingPath | ReadError | WalkError | NonElementReturned | FileFinished]:
     """
     Perform a recursive search through Python files.
 
@@ -96,6 +98,8 @@ def search_python_files(
         respect_vcs_ignores=respect_vcs_ignores,
     ):
         if isinstance(path, MissingPath):
+            yield path
+        elif isinstance(path, WalkError):
             yield path
         else:
             yield from search_python_file(path, query_func, expression)

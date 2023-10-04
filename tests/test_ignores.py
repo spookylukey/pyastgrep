@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pyastgrep.ignores
 from pathspec.gitignore import GitIgnoreSpec
 from pyastgrep.files import get_files_to_search
-from pyastgrep.ignores import DirectoryPathSpec, find_gitignore_files
+from pyastgrep.ignores import DirectoryPathSpec, WalkError, find_gitignore_files
 
 from tests.utils import chdir, run_print
 
@@ -144,3 +144,23 @@ def test_no_global_git_ignores():
         # We should not crash or print any output
         result = run_print(Path("."), "Name")
         assert not result.stderr
+
+
+def test_gitignore_files_with_bad_perms():
+    with chdir(DIR / "badperms"):
+        try:
+            Path(".gitignore").chmod(0)
+            assert list(get_files_to_search([Path(".")], respect_global_ignores=False)) == []
+        finally:
+            Path(".gitignore").chmod(0o777)
+
+
+def test_gitignore_files_with_bad_perms2():
+    with chdir(DIR):
+        try:
+            Path("badperms2").chmod(0)
+            results = list(get_files_to_search([Path("badperms2")], respect_global_ignores=False))
+            assert len(results) == 1
+            assert isinstance(results[0], WalkError)
+        finally:
+            Path("badperms2").chmod(0o777)  # keep other tools happy

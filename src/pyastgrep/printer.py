@@ -4,6 +4,8 @@ import sys
 import textwrap
 from typing import Callable, Iterable, Protocol, TextIO
 
+from pyastgrep.ignores import WalkError
+
 from . import xml
 from .color import Colorer, NullColorer
 from .context import ContextType, StatementContext, StaticContext
@@ -34,7 +36,7 @@ LinePrinter = Callable[[str], None]
 
 
 def print_results(
-    results: Iterable[Match | MissingPath | ReadError | NonElementReturned | FileFinished],
+    results: Iterable[Match | MissingPath | ReadError | WalkError | NonElementReturned | FileFinished],
     print_xml: bool = False,
     print_ast: bool = False,
     context: ContextType = StaticContext(before=0, after=0),
@@ -85,6 +87,9 @@ def print_results(
             do_error(f"{result.path}: No such file or directory")
             continue
         elif isinstance(result, ReadError):
+            do_error(f"{result.path}: {result.exception}")
+            continue
+        elif isinstance(result, WalkError):
             do_error(f"{result.path}: {result.exception}")
             continue
         elif isinstance(result, NonElementReturned):

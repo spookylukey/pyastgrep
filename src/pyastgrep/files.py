@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Iterable, Sequence
 
-from .ignores import DirWalker
+from .ignores import DirWalker, WalkError
 
 
 @dataclass(frozen=True)
@@ -20,7 +20,7 @@ def get_files_to_search(
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
-) -> Iterable[Path | BinaryIO | MissingPath]:
+) -> Iterable[Path | BinaryIO | MissingPath | WalkError]:
     """
     Entry-point function for finding files to search.
 

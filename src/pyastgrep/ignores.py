@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Union, overload
 
@@ -27,6 +28,12 @@ from pathspec import GitIgnoreSpec, PathSpec
 from pathspec.patterns.gitwildmatch import GitWildMatchPattern
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class WalkError:
+    path: Path
+    exception: Exception
 
 
 class DirectoryPathSpec:
@@ -186,7 +193,7 @@ class DirWalker:
             start_directory=directory,
         )
 
-    def walk(self) -> Iterable[Path]:
+    def walk(self) -> Iterable[Path | WalkError]:
         if self.start_directory is None or self.working_dir is None:
             raise AssertionError("Must use `for_dir` before `walk`")
         for filepath in self.start_directory.glob(self.glob):
@@ -208,9 +215,17 @@ class DirWalker:
                     yield filepath
                 else:
                     yield filepath.resolve().relative_to(self.working_dir)
-        for subdir in self.start_directory.iterdir():
-            if subdir.is_symlink():
-                logger.debug("Ignoring symlink %s", subdir)
+
+        for subdir in tolerant_iterdir(self.start_directory):
+            if not isinstance(subdir, Path):
+                yield subdir
+                continue
+            try:
+                if subdir.is_symlink():
+                    logger.debug("Ignoring symlink %s", subdir)
+                    continue
+            except PermissionError:
+                logger.debug("Ignoring unreadable file %s", subdir)
                 continue
             if subdir.is_dir():
                 pathspec_matched = False
@@ -242,12 +257,24 @@ class DirWalker:
         )
 
 
+def tolerant_iterdir(directory: Path) -> Iterable[Path | WalkError]:
+    try:
+        yield from directory.iterdir()
+    except PermissionError as e:
+        yield WalkError(directory, e)
+
+
 def pathspec_for_gitignore(gitignore_file: Path, is_global_gitignore: bool = False) -> PathSpec | DirectoryPathSpec:
-    with open(gitignore_file) as fp:
-        if is_global_gitignore:
-            return GlobalGitIgnoreSpec.from_lines(fp)
-        else:
-            return DirectoryPathSpec(gitignore_file.parent, GitIgnoreSpec.from_lines(fp))
+    try:
+        with open(gitignore_file) as fp:
+            if is_global_gitignore:
+                return GlobalGitIgnoreSpec.from_lines(fp)
+            else:
+                return DirectoryPathSpec(gitignore_file.parent, GitIgnoreSpec.from_lines(fp))
+    except PermissionError:
+        # Silently ignoring unreadable .gitignore is probably our best option
+        logger.debug("Ignoring unreadable gitignore %s", gitignore_file)
+        return DirectoryPathSpec(gitignore_file.parent, GitIgnoreSpec.from_lines([]))
 
 
 def find_gitignore_files(starting_path: Path, *, recurse_up: bool = True) -> list[Path]:
@@ -262,13 +289,20 @@ def find_gitignore_files(starting_path: Path, *, recurse_up: bool = True) -> lis
     current_path = starting_path.resolve()
     while True:
         candidate = current_path / ".gitignore"
-        if candidate.exists():
-            files.append(candidate)
+        try:
+            if candidate.exists():
+                files.append(candidate)
+        except PermissionError:
+            # Usually because we can't read from the dir, so silently ignore
+            logger.debug("Ignoring unreadable dir %s", current_path)
         if not recurse_up:
             break
-        if (current_path / ".git").exists():
-            # Found the root git repo, stop searching
-            break
+        try:
+            if (current_path / ".git").exists():
+                # Found the root git repo, stop searching
+                break
+        except PermissionError:
+            pass
         parent = current_path.parent
         if parent == current_path:
             # reached root
