@@ -13,6 +13,7 @@ How to do releases
 * Update the version number (removing the ``-dev1`` part):
 
   * src/pyastgrep/__init__.py
+  * docs/conf.py
 
 * Commit with "Version bump"
 

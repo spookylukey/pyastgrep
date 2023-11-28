@@ -8,6 +8,10 @@ pyastgrep
 .. image:: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml/badge.svg
      :target: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml
 
+.. image:: https://readthedocs.org/projects/pyastgrep/badge/?version=latest
+   :target: https://pyastgrep.readthedocs.org/en/latest/
+
+
 A command-line utility for grepping Python files using XPath syntax (or CSS
 selectors) against the Python AST (Abstract Syntax Tree).
 

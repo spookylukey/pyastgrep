@@ -16,6 +16,7 @@ Welcome to pyastgrep's documentation!
    tips
    bugs
    contributing
+   history
 
 
 Indices and tables
