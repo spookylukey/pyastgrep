@@ -22,7 +22,8 @@ of grepping for string matches.
 The interface and behaviour is designed to match grep and ripgrep as far as it
 makes sense to do so.
 
-Documentation: in the process of migration to readthedocs, see docs/ for now.
+See `the documentation <https://pyastgrep.readthedocs.io/>`_ for more
+information, or the ``docs`` folder.
 
 
 History

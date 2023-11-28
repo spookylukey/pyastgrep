@@ -16,6 +16,7 @@ release = "1.3.1"
 
 extensions = [
     "sphinx_rtd_theme",
+    "sphinx.ext.intersphinx",
 ]
 
 templates_path = ["_templates"]
@@ -30,3 +31,7 @@ html_static_path = ["_static"]
 
 
 pygments_style = "sphinx"
+
+# --- Extensions
+
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}

@@ -6,6 +6,7 @@ Version 1.3.2 - unreleased
 --------------------------
 
 * Fixed various crashers for permission errors or broken files
+* Documented API for use as a library.
 
 Version 1.3.1 - 2023-07-19
 --------------------------
