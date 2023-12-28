@@ -103,7 +103,7 @@ new Python version will make significant changes made to the AST generated for
 the same code.
 
 You’ll also need some understanding of how to write XPath expressions (see links
-at the bottom), but the examples below should get you started.
+at the bottom), but the examples in the next section should get you started.
 
 
 
