@@ -8,7 +8,7 @@ How to do releases
 
     tox
 
-* Change HISTORY.rst to remove " - unreleased"
+* Change docs/history.rst to remove " - unreleased"
 
 * Update the version number (removing the ``-dev1`` part):
 
@@ -26,7 +26,7 @@ Post release
 ------------
 
 * Bump version numbers to next version, and add ``-dev1`` suffix, for example
-  ``0.9.0-dev1``
+  ``0.9.0-dev1``, in the same places as above.
 
 * Add new section to HISTORY.rst, with " - unreleased".
 
