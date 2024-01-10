@@ -2,7 +2,7 @@
 History
 =======
 
-Version 1.3.2 - unreleased
+Version 1.3.2 - 2024-01-10
 --------------------------
 
 * Fixed various crashers for permission errors or broken files
