@@ -1,14 +1,15 @@
 pyastgrep
 =========
 
+|badge_fury| |badge_tests| |badge_rtd|
 
-.. image:: https://badge.fury.io/py/pyastgrep.svg
+.. |badge_fury| image:: https://badge.fury.io/py/pyastgrep.svg
      :target: https://badge.fury.io/py/pyastgrep
 
-.. image:: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml/badge.svg
+.. |badge_tests| image:: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml/badge.svg
      :target: https://github.com/spookylukey/pyastgrep/actions/workflows/tests.yml
 
-.. image:: https://readthedocs.org/projects/pyastgrep/badge/?version=latest
+.. |badge_rtd| image:: https://readthedocs.org/projects/pyastgrep/badge/?version=latest
    :target: https://pyastgrep.readthedocs.org/en/latest/
 
 
