@@ -130,7 +130,7 @@ class DefaultContextHandler:
     #   if there is a match on multiple parts of the line.
     # - ensuring that we print results as soon as we get them,
     #   rather than waiting (grouping by file would simplify some things)
-    # - A match line is formatted differently from a result line, which
+    # - A match line is formatted differently from a context line, which
     #   means we have to wait to print the 'after' lines of a previous result
     #   to be sure they don't contain a match line.
     # - edge conditions
