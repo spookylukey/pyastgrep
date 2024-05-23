@@ -81,3 +81,10 @@ at this point we are not documenting or guaranteeing API stability for these
 functions. Please contribute to `the discussion
 <https://github.com/spookylukey/pyastgrep/discussions/18>`_ if you have needs
 here.
+
+Example
+=======
+
+For example usage of ``search_python_files``, see the blog post `pyastgrep and
+custom linting
+<https://lukeplant.me.uk/blog/posts/pyastgrep-and-custom-linting/>`_.
