@@ -128,3 +128,21 @@ Examples
   .. code-block:: shell
 
      pyastgrep '(.//Call[./func/Attribute[@attr="filter" or @attr="exclude"]] | .//Call[./func/Name[@id="Q"]]) [./keywords/keyword[contains(@arg, "user")]]'
+
+* Annotations involving ``list`` or ``set`` or ``dict`` that are in the body of
+  a class definition that is decorated as ``@dataclass(frozen=True)``:
+
+  .. code-block:: shell
+
+     pyastgrep './/ClassDef/body/AnnAssign/annotation//Name[@id="list" or @id="set" or @id="dict"][ancestor::ClassDef[./decorator_list/Call[./func/Name[@id="dataclass"]][./keywords/keyword[@arg="frozen"]/value/Constant[@value="True"]]]]'
+
+  Notes the use of:
+
+  - ``//Name`` so that we find things like ``foo: list`` and ``foo: tuple[list]`` and ``foo: list[str]``
+  - ``ancestor`` to match back to the context we’re interested in. We could instead have done:
+
+    .. code-block:: shell
+
+       pyastgrep './/ClassDef[./decorator_list/Call[./func/Name[@id="dataclass"]][./keywords/keyword[@arg="frozen"]/value/Constant[@value="True"]]][./body/AnnAssign/annotation//Name[@id="list" or @id="set" or @id="dict"]]'
+
+    but this will match the ``class`` definition rather than the bad annotation.
