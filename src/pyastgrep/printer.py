@@ -9,8 +9,8 @@ from pyastgrep.ignores import WalkError
 from . import xml
 from .color import Colorer, NullColorer
 from .context import ContextType, StatementContext, StaticContext
-from .files import MissingPath
-from .search import FileFinished, Match, NonElementReturned, Pathlike, ReadError
+from .files import MissingPath, ReadError
+from .search import FileFinished, Match, NonElementReturned, Pathlike
 
 
 class Formatter(Protocol):

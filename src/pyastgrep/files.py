@@ -7,12 +7,21 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Iterable, Sequence
 
+from lxml.etree import _Element
+
+from .asts import ast_to_xml
 from .ignores import DirWalker, WalkError
 
 
 @dataclass(frozen=True)
 class MissingPath:
     path: Path
+
+
+@dataclass(frozen=True)
+class ReadError:
+    path: str
+    exception: Exception
 
 
 def get_files_to_search(
@@ -78,7 +87,7 @@ def get_encoding(python_file_bytes: bytes) -> str:
 
 def parse_python_file(contents: bytes, filename: str | Path, *, auto_dedent: bool) -> tuple[str, ast.AST]:
     """
-    Parse Python file and return a tuple of (contents as string, parsed contents)
+    Parse Python file and return a tuple of (contents as string, AST of parsed contents)
     """
     if auto_dedent:
         contents = auto_dedent_code(contents)
@@ -124,3 +133,41 @@ def auto_dedent_code(python_code: bytes) -> bytes:
             return python_code
         new_lines.append(line[strip_amount:])
     return b"\n".join(new_lines)
+
+
+def python_file_to_xml(path: Path) -> tuple[str, _Element, dict[_Element, ast.AST]] | ReadError:
+    """
+    Reads the Python file at Python, and converts to XML format.
+    Returns a tuple containing:
+      - the full text of the Python file as str
+      - the root XML node, as an lxml Element
+      - a dictionary mapping lxml Elements to AST nodes.
+
+    Returns ReadError for cases of OSError when reading or SyntaxError in the file.
+    """
+    try:
+        contents = path.read_bytes()
+    except OSError as ex:
+        return ReadError(str(path), ex)
+
+    return python_source_to_xml(filename=str(path), contents=contents, auto_dedent=False)
+
+
+def python_source_to_xml(
+    *,
+    filename: str,
+    contents: bytes,
+    auto_dedent: bool,
+) -> tuple[str, _Element, dict[_Element, ast.AST]] | ReadError:
+    node_mappings: dict[_Element, ast.AST] = {}
+
+    try:
+        str_contents, parsed_ast = parse_python_file(contents, filename, auto_dedent=auto_dedent)
+    except (SyntaxError, ValueError) as ex:
+        return ReadError(filename, ex)
+
+    xml_ast = ast_to_xml(
+        parsed_ast,
+        node_mappings,
+    )
+    return (str_contents, xml_ast, node_mappings)
