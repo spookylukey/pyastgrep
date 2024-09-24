@@ -10,8 +10,16 @@ You can omit files or directories and the current directory (and
 sub-directories) will be searched. It’s designed to be used like `ripgrep
 <https://github.com/BurntSushi/ripgrep/>`_.
 
-See ``pyastgrep --help`` for more command line options.
+The above command does the following:
 
+- it search the files or directories specified for Python files
+- it parses the Python source to AST, and converts this to XML using a very
+  simple one-to-one mapping from AST nodes to XML nodes.
+- it searches the XML documents for nodes that match the given XPath expression
+- it prints the Python code for the matching nodes
+
+See ``pyastgrep --help`` for more command line options, which include the
+ability to use CSS selectors instead of XPath expressions, and other options.
 
 pyastgrep in action
 ===================
