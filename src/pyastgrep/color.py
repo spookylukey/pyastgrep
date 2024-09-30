@@ -83,11 +83,11 @@ class AnsiColorer:
 
         # So, we only color matches if they start and end on the same line.
         ast_node = match.ast_node
-        if match.position.lineno == ast_node.lineno == ast_node.end_lineno:
+        if match.position.lineno == ast_node.lineno == ast_node.end_lineno:  # type: ignore [attr-defined]
             raw_line = match.matching_line
-            before = raw_line[0 : ast_node.col_offset]
-            matched = raw_line[ast_node.col_offset : ast_node.end_col_offset]
-            after = raw_line[ast_node.end_col_offset :]
+            before = raw_line[0 : ast_node.col_offset]  # type: ignore [attr-defined]
+            matched = raw_line[ast_node.col_offset : ast_node.end_col_offset]  # type: ignore [attr-defined]
+            after = raw_line[ast_node.end_col_offset :]  # type: ignore [attr-defined]
             return f"{before}{self.match_color}{matched}{Styles.END}{after}"
 
         else:
