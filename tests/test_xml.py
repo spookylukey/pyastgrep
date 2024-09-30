@@ -1,3 +1,4 @@
+import re
 import sys
 from pathlib import Path
 
@@ -104,9 +105,7 @@ def _file_to_xml(path: Path):
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="AST different on Python 3.8")
 def test_xml_everything():
     # Smoke test to check we didn't break anything.
-    assert (
-        _file_to_xml(DIR / "everything.py")
-        == """
+    EXPECTED = """
 <Module>
   <body>
     <FunctionDef lineno="2" col_offset="0" type="str" name="function">
@@ -177,6 +176,7 @@ def test_xml_everything():
         </Assign>
       </body>
       <decorator_list/>
+      <type_params/>
     </FunctionDef>
     <FunctionDef lineno="10" col_offset="0" type="str" name="function_kwarg">
       <args>
@@ -196,6 +196,7 @@ def test_xml_everything():
         <Pass lineno="11" col_offset="4"/>
       </body>
       <decorator_list/>
+      <type_params/>
     </FunctionDef>
     <FunctionDef lineno="14" col_offset="0" type="str" name="function_star_args">
       <args>
@@ -214,6 +215,7 @@ def test_xml_everything():
         <Pass lineno="15" col_offset="4"/>
       </body>
       <decorator_list/>
+      <type_params/>
     </FunctionDef>
     <FunctionDef lineno="18" col_offset="0" type="str" name="function_star_kwargs">
       <args>
@@ -232,6 +234,7 @@ def test_xml_everything():
         <Pass lineno="19" col_offset="4"/>
       </body>
       <decorator_list/>
+      <type_params/>
     </FunctionDef>
     <FunctionDef lineno="22" col_offset="0" type="str" name="function_pos_kw_only">
       <args>
@@ -253,6 +256,7 @@ def test_xml_everything():
         <Pass lineno="23" col_offset="4"/>
       </body>
       <decorator_list/>
+      <type_params/>
     </FunctionDef>
     <FunctionDef lineno="26" col_offset="0" type="str" name="function_all">
       <args>
@@ -282,6 +286,7 @@ def test_xml_everything():
         <Pass lineno="27" col_offset="4"/>
       </body>
       <decorator_list/>
+      <type_params/>
     </FunctionDef>
     <ClassDef lineno="30" col_offset="0" type="str" name="MyClass">
       <bases/>
@@ -290,6 +295,7 @@ def test_xml_everything():
         <Pass lineno="31" col_offset="4"/>
       </body>
       <decorator_list/>
+      <type_params/>
     </ClassDef>
     <FunctionDef lineno="34" col_offset="0" type="str" name="function_ann">
       <args>
@@ -388,6 +394,7 @@ def test_xml_everything():
           </ctx>
         </Name>
       </returns>
+      <type_params/>
     </FunctionDef>
     <Assign lineno="39" col_offset="0">
       <targets>
@@ -417,4 +424,10 @@ def test_xml_everything():
   <type_ignores/>
 </Module>
 """.lstrip()
-    )
+
+    # Hacks for different Python versios, we may need to just have a dictionary
+    # of different outputs
+    if sys.version_info < (3, 12):
+        EXPECTED = re.subn(r" *<type_params/>\n", "", EXPECTED)[0]
+
+    assert _file_to_xml(DIR / "everything.py") == EXPECTED
