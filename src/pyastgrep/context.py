@@ -33,7 +33,7 @@ class StatementContext:
         statement_node = ast_utils.get_ast_statement_node(result_node)
         first_line = statement_node.lineno  # type: ignore [attr-defined]
         if hasattr(statement_node, "decorator_list"):
-            decorator_list = statement_node.decorator_list
+            decorator_list = statement_node.decorator_list  # type: ignore [attr-defined]
             first_line = min((first_line, *(n.lineno for n in decorator_list)))
         before_context = result_node.lineno - first_line  # type: ignore [attr-defined]
         if isinstance(statement_node.end_lineno, int):  # type: ignore [attr-defined]

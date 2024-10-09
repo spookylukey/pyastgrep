@@ -219,6 +219,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
     if stdin is None:
         # Need to use .buffer here, to get bytes version, not text
         stdin = sys.stdin.buffer
+    assert stdin is not None
 
     paths: list[Path | BinaryIO]
     if len(args.path) == 0:
