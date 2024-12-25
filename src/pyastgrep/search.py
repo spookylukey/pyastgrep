@@ -4,7 +4,7 @@ from __future__ import annotations
 import ast
 from dataclasses import dataclass
 from pathlib import Path
-from typing import BinaryIO, Callable, Iterable, Literal, Sequence, Union
+from typing import BinaryIO, Callable, Iterable, Sequence, Union
 
 from lxml.etree import _Element, _ElementUnicodeResult
 from typing_extensions import TypeAlias
@@ -12,9 +12,7 @@ from typing_extensions import TypeAlias
 from pyastgrep.ignores import WalkError
 
 from . import xml
-from .files import MissingPath, ReadError, get_files_to_search, python_file_to_xml, python_source_to_xml
-
-Pathlike = Union[Path, Literal["<stdin>"]]
+from .files import MissingPath, Pathlike, ReadError, get_files_to_search, process_python_file, process_python_source
 
 
 @dataclass(frozen=True)
@@ -108,24 +106,17 @@ def search_python_file(
     query_func: XMLQueryFunc,
     expression: str,
 ) -> Iterable[Match | ReadError | NonElementReturned]:
-    node_mappings: dict[_Element, ast.AST] = {}
-    source: Pathlike
     if isinstance(path, Path):
-        source = path
-        processed_source = python_file_to_xml(path)
+        processed_python = process_python_file(path)
     else:
-        source = "<stdin>"
-        processed_source = python_source_to_xml(filename=source, contents=path.read(), auto_dedent=True)
+        processed_python = process_python_source(filename="<stdin>", contents=path.read(), auto_dedent=True)
 
-    if isinstance(processed_source, ReadError):
-        yield processed_source
+    if isinstance(processed_python, ReadError):
+        yield processed_python
         return
 
-    str_contents, xml_ast, node_mappings = processed_source
-
-    file_lines = str_contents.splitlines()
-
-    matching_elements = query_func(xml_ast, expression)
+    file_lines = processed_python.contents.splitlines()
+    matching_elements = query_func(processed_python.xml, expression)
 
     try:
         iterator = iter(matching_elements)
@@ -141,8 +132,14 @@ def search_python_file(
             yield NonElementReturned(element)
             continue
 
-        ast_node = node_mappings.get(element, None)
+        ast_node = processed_python.node_mappings.get(element, None)
         if ast_node is not None:
             position = position_from_node(ast_node)
             if position is not None:
-                yield Match(source, file_lines, element, position, ast_node)
+                yield Match(
+                    path=processed_python.path,
+                    file_lines=file_lines,
+                    xml_element=element,
+                    position=position,
+                    ast_node=ast_node,
+                )
