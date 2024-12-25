@@ -43,13 +43,13 @@ If you want to contribute to pyastgrep, great! You'll need to:
 
     pre-commit run --all --all-files
 
-- Optionally, run mypy::
+- Optionally, run pyright::
 
-    mypy .
+    pyright .
 
   We only expect it to pass on Python 3.11, which you can check by doing::
 
-    tox -e mypy
+    tox -e pyright
 
 
 Bug fixes and other changes can be submitted using pull requests on GitHub. For

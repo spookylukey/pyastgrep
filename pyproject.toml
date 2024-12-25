@@ -98,9 +98,10 @@ disallow_incomplete_defs = false
 
 [tool.uv]
 dev-dependencies = [
-    "mypy>=1.11.2",
     "pre-commit>=3.5.0",
+    "pyright>=1.1.391",
     "pytest>=8.3.3",
     "tox-uv>=1.13.1",
     "tox>=4.21.2",
+    "types-lxml>=2024.12.13",
 ]

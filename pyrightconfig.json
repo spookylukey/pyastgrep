@@ -1,0 +1,16 @@
+{
+  "include": [
+      "src",
+      "tests"
+  ],
+
+  "exclude": [
+      "**/dist",
+      "**/build",
+      "tests/examples"
+  ],
+
+  "ignore": [
+      "tests/examples"
+  ],
+}
