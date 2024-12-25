@@ -1,3 +1,59 @@
+[project]
+name = "pyastgrep"
+description = "A search/query tool for Python abstract syntax trees"
+license = {text = "MIT"}
+authors = [{name = "Luke Plant"}]
+keywords = ["xpath xml ast asts syntax query css grep"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+]
+urls = {Homepage = "https://github.com/spookylukey/pyastgrep"}
+requires-python = ">=3.8"
+dependencies = [
+    "lxml>=3.3.5",
+    "elementpath",
+    "astpretty",
+    "pathspec",
+    "cssselect>=1.2",
+    'backports.strenum; python_version < "3.11"',
+]
+dynamic = ["version"]
+
+[project.readme]
+file = "README.rst"
+content-type = "text/x-rst"
+
+[project.scripts]
+pyastgrep = "pyastgrep.cli:main"
+pyastdump = "pyastgrep.dump:main"
+
+[build-system]
+requires = ["setuptools>=61.2"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.dynamic]
+version = {attr = "pyastgrep.__version__"}
+
+
 [tool.black]
 line-length = 120
 # required-version = '22.1.0' # see https://github.com/psf/black/issues/2493
@@ -39,3 +95,12 @@ disallow_incomplete_defs = false
 module = "tests.*"
 disallow_untyped_defs = false
 disallow_incomplete_defs = false
+
+[tool.uv]
+dev-dependencies = [
+    "mypy>=1.11.2",
+    "pre-commit>=3.5.0",
+    "pytest>=8.3.3",
+    "tox-uv>=1.13.1",
+    "tox>=4.21.2",
+]
