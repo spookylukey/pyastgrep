@@ -106,7 +106,7 @@ def print_results(
         context_handler.handle_result(result)
 
         if print_ast:
-            line_printer(astpretty.pformat(result.ast_node))
+            line_printer(astpretty.pformat(result.ast_node))  # type: ignore[reportPossiblyUnboundVariable]
 
         if print_xml:
             line_printer(xml.tostring(result.xml_element, pretty_print=True).decode("utf-8"))

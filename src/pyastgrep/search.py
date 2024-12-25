@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO, Callable, Iterable, Literal, Sequence, Union
 
-from lxml.etree import _Element
+from lxml.etree import _Element, _ElementUnicodeResult
 
 from pyastgrep.ignores import WalkError
 
@@ -58,7 +58,7 @@ def position_from_node(node: ast.AST) -> Position | None:
     return None
 
 
-def get_query_func(*, xpath2: bool) -> Callable[[_Element, str], Iterable[_Element]]:
+def get_query_func(*, xpath2: bool) -> Callable[[_Element, str], Iterable[_Element | _ElementUnicodeResult]]:
     if xpath2:
         from .xpath2 import elementpath_query
 
@@ -101,7 +101,7 @@ def search_python_files(
 
 def search_python_file(
     path: Path | BinaryIO,
-    query_func: Callable[[ast.AST, str], Iterable[_Element]],
+    query_func: Callable[[_Element, str], Iterable[_Element | _ElementUnicodeResult]],
     expression: str,
 ) -> Iterable[Match | ReadError | NonElementReturned]:
     node_mappings: dict[_Element, ast.AST] = {}
@@ -135,6 +135,7 @@ def search_python_file(
             # an attribute rather than a node. We have no way of getting from here to
             # something representing an AST node.
             yield NonElementReturned(element)
+            continue
 
         ast_node = node_mappings.get(element, None)
         if ast_node is not None:

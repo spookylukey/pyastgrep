@@ -13,7 +13,7 @@ from pyastgrep.printer import print_results
 from pyastgrep.search import search_python_files
 
 if hasattr(contextlib, "chdir"):
-    chdir = contextlib.chdir
+    chdir = contextlib.chdir  # type: ignore[reportAttributeAccessIssue]
 else:
     # Python < 3.11
     class chdir(contextlib.AbstractContextManager):  # type: ignore[type-arg,no-redef]
