@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import BinaryIO, Callable, Iterable, Literal, Sequence, Union
 
 from lxml.etree import _Element, _ElementUnicodeResult
+from typing_extensions import TypeAlias
 
 from pyastgrep.ignores import WalkError
 
@@ -58,7 +59,10 @@ def position_from_node(node: ast.AST) -> Position | None:
     return None
 
 
-def get_query_func(*, xpath2: bool) -> Callable[[_Element, str], Iterable[_Element | _ElementUnicodeResult]]:
+XMLQueryFunc: TypeAlias = Callable[[_Element, str], Iterable[Union[_Element, _ElementUnicodeResult]]]
+
+
+def get_query_func(*, xpath2: bool) -> XMLQueryFunc:
     if xpath2:
         from .xpath2 import elementpath_query
 
@@ -101,7 +105,7 @@ def search_python_files(
 
 def search_python_file(
     path: Path | BinaryIO,
-    query_func: Callable[[_Element, str], Iterable[_Element | _ElementUnicodeResult]],
+    query_func: XMLQueryFunc,
     expression: str,
 ) -> Iterable[Match | ReadError | NonElementReturned]:
     node_mappings: dict[_Element, ast.AST] = {}
