@@ -2,7 +2,7 @@
 History
 =======
 
-Version 1.4 - unreleased
+Version 1.4 - 2024-12-27
 ------------------------
 
 * Added ``python_file_processor`` parameter to :func:`pyastgrep.api.search_python_files`,
