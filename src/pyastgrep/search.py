@@ -12,7 +12,15 @@ from typing_extensions import TypeAlias
 from pyastgrep.ignores import WalkError
 
 from . import xml
-from .files import MissingPath, Pathlike, ReadError, get_files_to_search, process_python_file, process_python_source
+from .files import (
+    MissingPath,
+    Pathlike,
+    ProcessedPython,
+    ReadError,
+    get_files_to_search,
+    process_python_file,
+    process_python_source,
+)
 
 
 @dataclass(frozen=True)
@@ -72,10 +80,12 @@ def get_query_func(*, xpath2: bool) -> XMLQueryFunc:
 def search_python_files(
     paths: Sequence[Path | BinaryIO],
     expression: str,
+    *,
     xpath2: bool = False,
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
+    python_file_processor: Callable[[Path], ProcessedPython | ReadError] = process_python_file,
 ) -> Iterable[Match | MissingPath | ReadError | WalkError | NonElementReturned | FileFinished]:
     """
     Perform a recursive search through Python files.
@@ -97,7 +107,7 @@ def search_python_files(
         elif isinstance(path, WalkError):
             yield path
         else:
-            yield from search_python_file(path, query_func, expression)
+            yield from search_python_file(path, query_func, expression, python_file_processor=python_file_processor)
             yield FileFinished(path)
 
 
@@ -105,9 +115,11 @@ def search_python_file(
     path: Path | BinaryIO,
     query_func: XMLQueryFunc,
     expression: str,
+    *,
+    python_file_processor: Callable[[Path], ProcessedPython | ReadError] = process_python_file,
 ) -> Iterable[Match | ReadError | NonElementReturned]:
     if isinstance(path, Path):
-        processed_python = process_python_file(path)
+        processed_python = python_file_processor(path)
     else:
         processed_python = process_python_source(filename="<stdin>", contents=path.read(), auto_dedent=True)
 
