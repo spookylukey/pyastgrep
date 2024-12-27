@@ -105,4 +105,6 @@ dev-dependencies = [
     "tox-uv>=1.13.1",
     "tox>=4.21.2",
     "types-lxml>=2024.12.13",
+    "sphinx>=7.1.2",
+    "sphinx-rtd-theme>=3.0.2",
 ]
