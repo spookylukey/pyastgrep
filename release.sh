@@ -1,6 +1,7 @@
 #!/bin/sh
 
 # Tests to ensure we don't really break something:
+uv sync
 pre-commit run --all --all-files || exit 1
 pytest || exit 1
 
