@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 import lxml.etree
-import pytest
 from pyastgrep.asts import ast_to_xml
 from pyastgrep.files import parse_python_file
 
@@ -102,7 +101,6 @@ def _file_to_xml(path: Path):
     return lxml.etree.tostring(doc, pretty_print=True).decode("utf-8")
 
 
-@pytest.mark.skipif(sys.version_info < (3, 9), reason="AST different on Python 3.8")
 def test_xml_everything():
     # Smoke test to check we didn't break anything.
     EXPECTED = """
