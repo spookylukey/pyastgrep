@@ -4,8 +4,9 @@ import ast
 import os
 import re
 from dataclasses import dataclass
+from functools import cache
 from pathlib import Path
-from typing import BinaryIO, Iterable, Literal, Sequence, Union
+from typing import BinaryIO, Callable, Iterable, Literal, Sequence, Union
 
 from lxml.etree import _Element
 from typing_extensions import TypeAlias
@@ -160,6 +161,9 @@ def process_python_file(path: Path) -> ProcessedPython | ReadError:
         return ReadError(str(path), ex)
 
     return process_python_source(filename=path, contents=contents, auto_dedent=False)
+
+
+process_python_file_cached: Callable[[Path], ProcessedPython | ReadError] = cache(process_python_file)
 
 
 def process_python_source(

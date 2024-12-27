@@ -2,8 +2,12 @@
 History
 =======
 
-Version 1.3.3 - unreleased
---------------------------
+Version 1.4 - unreleased
+------------------------
+
+* Added ``python_file_processor`` parameter to :func:`pyastgrep.api.search_python_files`,
+  which particularly serves the needs of people using pyastgrep as a library who
+  want to apply caching.
 
 Version 1.3.2 - 2024-01-10
 --------------------------
