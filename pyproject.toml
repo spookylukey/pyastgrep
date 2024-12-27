@@ -8,18 +8,18 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
 ]
 urls = {Homepage = "https://github.com/spookylukey/pyastgrep"}
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "lxml>=3.3.5",
     "elementpath",

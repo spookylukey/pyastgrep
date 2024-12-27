@@ -2,7 +2,7 @@
 Installation
 ============
 
-Python 3.8+ required.
+Python 3.9+ required.
 
 We recommend `pipx <https://pipxproject.github.io/pipx/>`_ to install it
 conveniently in an isolated environment:
