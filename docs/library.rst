@@ -37,7 +37,9 @@ here.
    However, this conversion is relatively expensive, and for various use cases
    as a library, you might want to cache this operation.
 
-   To achieve this, you can pass the ``python_file_processor`` argument. This value must be a callable that takes a :class:`pathlib.Path` objects and returns a :class:`ProcessedPython` object or a :class:`ReadError` object.
+   To achieve this, you can pass the ``python_file_processor`` argument. This
+   value must be a callable that takes a :class:`pathlib.Path` objects and
+   returns a :class:`ProcessedPython` object or a :class:`ReadError` object.
 
    By default this is :func:`process_python_file` but an alternative can be
    provided, such as :func:`process_python_file_cached`, or your own callable
