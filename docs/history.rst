@@ -2,6 +2,11 @@
 History
 =======
 
+Version 1.5 - unreleased
+------------------------
+
+* Respect filter rules in ``.rgignore`` files.
+
 Version 1.4 - 2024-12-27
 ------------------------
 

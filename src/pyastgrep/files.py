@@ -33,6 +33,7 @@ def get_files_to_search(
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
+    respect_dot_ignores: bool = True,
 ) -> Iterable[Path | BinaryIO | MissingPath | WalkError]:
     """
     Entry-point function for finding files to search.
@@ -48,6 +49,7 @@ def get_files_to_search(
         include_hidden=include_hidden,
         respect_global_ignores=respect_global_ignores,
         respect_vcs_ignores=respect_vcs_ignores,
+        respect_dot_ignores=respect_dot_ignores,
     )
     working_dir = Path(os.getcwd())
     for path in paths:
