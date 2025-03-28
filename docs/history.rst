@@ -2,7 +2,7 @@
 History
 =======
 
-Version 1.5 - unreleased
+Version 1.5 - 2025-03-28
 ------------------------
 
 * Respect filter rules in ``.rgignore`` files.
