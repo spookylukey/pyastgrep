@@ -46,6 +46,10 @@ def test_default_ignores():
         "custom_gitignored/__init__.py",
         "custom_gitignored/should_be_ignored2.py",
         "custom_gitignored/subdir/should_be_ignored2.py",
+        # custom_rgignored is in this subdir's .rgignore
+        "custom_rgignored/__init__.py",
+        "custom_rgignored/should_be_ignored3.py",
+        "custom_rgignored/subdir/should_be_ignored3.py",
         # /subsubdir is in this subdir's .gitignore
         "subsubdir/not_ignored.py",
         # should_be_ignored.py is in subsubdir's .gitignore
@@ -68,7 +72,7 @@ def test_default_ignores():
             assert Path(p) not in files
 
         # We should get the same results if we start the search higher up.
-        # This is important for testing whether we are discovering .gitignore
+        # This is important for testing whether we are discovering .gitignore/.rgignore
         # files as we walk sub directories
 
         with chdir(REPO_ROOT):
@@ -104,6 +108,12 @@ def test_respect_vcs_ignores():
         files = list(get_files_to_search([Path(".")], respect_vcs_ignores=False))
         assert Path("custom_gitignored/should_be_ignored2.py") in files
         assert Path("subdir/subsubdir/should_be_ignored.py") in files
+
+
+def test_respect_dot_ignores():
+    with chdir(DIR):
+        files = list(get_files_to_search([Path(".")], respect_dot_ignores=False))
+        assert Path("custom_rgignored/should_be_ignored3.py") in files
 
 
 def test_override_on_cli():

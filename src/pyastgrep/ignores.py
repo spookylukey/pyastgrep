@@ -120,6 +120,7 @@ class DirWalker:
         include_hidden: bool = False,
         respect_global_ignores: bool = True,
         respect_vcs_ignores: bool = True,
+        respect_dot_ignores: bool = True,
     ):
         # DirWalker is immutable outside __init__
         self.glob: str = glob
@@ -142,6 +143,7 @@ class DirWalker:
         self.working_dir: Path | None = working_dir
         self.absolute_base: bool = absolute_base
         self.respect_vcs_ignores: bool = respect_vcs_ignores
+        self.respect_dot_ignores: bool = respect_dot_ignores
 
     def for_dir(self, directory: Path, working_dir: Path) -> DirWalker:
         """
@@ -150,13 +152,17 @@ class DirWalker:
         # Here we keep the already loaded global gitignore, and add any
         # more needed, up to and including the current directory.
         base_directory = directory.resolve()
+        pathspecs = self.pathspecs
         if self.respect_vcs_ignores:
-            pathspecs = self.pathspecs + [
+            pathspecs = pathspecs + [
                 pathspec_for_gitignore(ignorepath)
                 for ignorepath in find_gitignore_files(base_directory, recurse_up=True)
             ]
-        else:
-            pathspecs = self.pathspecs
+        if self.respect_dot_ignores:
+            pathspecs = pathspecs + [
+                pathspec_for_rgignore(ignorepath) for ignorepath in find_rgignore_files(base_directory)
+            ]
+
         # We also need to add a negative override to ensure that paths specified
         # directly are not ignored.
         if directory != Path("."):
@@ -181,12 +187,15 @@ class DirWalker:
         # and just check the new current dir.
         if self.start_directory is None:
             raise AssertionError("Must use `for_dir` before `for_subdir`")
+        extra_pathspecs = []
         if self.respect_vcs_ignores:
-            extra_pathspecs: list[PathSpecLike] = [
+            extra_pathspecs: list[PathSpecLike] = extra_pathspecs + [
                 pathspec_for_gitignore(ignorepath) for ignorepath in find_gitignore_files(directory, recurse_up=False)
             ]
-        else:
-            extra_pathspecs = []
+        if self.respect_dot_ignores:
+            extra_pathspecs: list[PathSpecLike] = extra_pathspecs + [
+                pathspec_for_rgignore(ignorepath) for ignorepath in find_rgignore_files(directory)
+            ]
 
         return self._clone(
             pathspecs=self.pathspecs + extra_pathspecs,
@@ -254,6 +263,7 @@ class DirWalker:
             working_dir=self.working_dir if working_dir is DEFAULT else working_dir,
             absolute_base=self.absolute_base if absolute_base is DEFAULT else absolute_base,
             respect_vcs_ignores=self.respect_vcs_ignores,
+            respect_dot_ignores=self.respect_dot_ignores,
         )
 
 
@@ -264,22 +274,49 @@ def tolerant_iterdir(directory: Path) -> Iterable[Path | WalkError]:
         yield WalkError(directory, e)
 
 
+def pathspec_for_rgignore(rgignore_file: Path) -> PathSpec | DirectoryPathSpec:
+    return pathspec_for_gitignore(rgignore_file)
+
+
 def pathspec_for_gitignore(gitignore_file: Path, is_global_gitignore: bool = False) -> PathSpec | DirectoryPathSpec:
+    return _pathspec_for_ignore_general(gitignore_file, is_global_gitignore=is_global_gitignore)
+
+
+def _pathspec_for_ignore_general(ignore_file: Path, is_global_gitignore: bool = False) -> PathSpec | DirectoryPathSpec:
     try:
-        with open(gitignore_file) as fp:
+        with open(ignore_file) as fp:
             if is_global_gitignore:
                 return GlobalGitIgnoreSpec.from_lines(fp)
             else:
-                return DirectoryPathSpec(gitignore_file.parent, GitIgnoreSpec.from_lines(fp))
+                return DirectoryPathSpec(ignore_file.parent, GitIgnoreSpec.from_lines(fp))
     except PermissionError:
         # Silently ignoring unreadable .gitignore is probably our best option
-        logger.debug("Ignoring unreadable gitignore %s", gitignore_file)
-        return DirectoryPathSpec(gitignore_file.parent, GitIgnoreSpec.from_lines([]))
+        logger.debug("Ignoring unreadable ignore %s", ignore_file)
+        return DirectoryPathSpec(ignore_file.parent, GitIgnoreSpec.from_lines([]))
 
 
 def find_gitignore_files(starting_path: Path, *, recurse_up: bool = True) -> list[Path]:
     """
     For a given working dir, returns a list of .gitignore files
+    that apply to it.
+    """
+    return _find_ignore_files_general(starting_path, ignore_file_name=".gitignore", recurse_up=recurse_up)
+
+
+def find_rgignore_files(starting_path: Path) -> list[Path]:
+    """
+    For a given working dir, returns a list of .rgignore files
+    that apply to it.
+    """
+    # We don't recurse up here, because there is no implied stopping point of a top level `.git` folder
+    # that we necessarily expect.
+
+    return _find_ignore_files_general(starting_path, ignore_file_name=".rgignore")
+
+
+def _find_ignore_files_general(starting_path: Path, *, ignore_file_name: str, recurse_up: bool = True) -> list[Path]:
+    """
+    For a given working dir, returns a list of .gitignore/.rgignore files
     that apply to it.
     """
     files = []
@@ -288,7 +325,7 @@ def find_gitignore_files(starting_path: Path, *, recurse_up: bool = True) -> lis
     # but it probably covers the most common setups
     current_path = starting_path.resolve()
     while True:
-        candidate = current_path / ".gitignore"
+        candidate = current_path / ignore_file_name
         try:
             if candidate.exists():
                 files.append(candidate)

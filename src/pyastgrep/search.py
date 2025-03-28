@@ -85,6 +85,7 @@ def search_python_files(
     include_hidden: bool = False,
     respect_global_ignores: bool = True,
     respect_vcs_ignores: bool = True,
+    respect_dot_ignores: bool = True,
     python_file_processor: Callable[[Path], ProcessedPython | ReadError] = process_python_file,
 ) -> Iterable[Match | MissingPath | ReadError | WalkError | NonElementReturned | FileFinished]:
     """
@@ -101,6 +102,7 @@ def search_python_files(
         include_hidden=include_hidden,
         respect_global_ignores=respect_global_ignores,
         respect_vcs_ignores=respect_vcs_ignores,
+        respect_dot_ignores=respect_dot_ignores,
     ):
         if isinstance(path, MissingPath):
             yield path

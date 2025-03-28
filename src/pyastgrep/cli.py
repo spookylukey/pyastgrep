@@ -155,8 +155,15 @@ option, which is typically ~/.config/git/ignore or
 )
 parser.add_argument(
     "--no-ignore-vcs",
-    help="""Don't respect version control ignore files such as
-.gitignore
+    help="""Don't respect filer rules from version control ignore
+files such as .gitignore
+    """,
+    action="store_true",
+    default=False,
+)
+parser.add_argument(
+    "--no-ignore-dot",
+    help="""Don't respect filter rules from .rgignore files
     """,
     action="store_true",
     default=False,
@@ -258,6 +265,7 @@ def main(sys_args: list[str] | None = None, stdin: BinaryIO | None = None) -> in
                 include_hidden=args.hidden,
                 respect_global_ignores=not args.no_ignore_global,
                 respect_vcs_ignores=not args.no_ignore_vcs,
+                respect_dot_ignores=not args.no_ignore_dot,
             ),
             print_xml=args.xml,
             print_ast=args.ast,
