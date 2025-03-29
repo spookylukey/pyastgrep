@@ -7,7 +7,7 @@ as a CLI, with a clear separation of the different layers. For now, the
 following API is documented as public and we will strive to maintain backwards
 compatibility with it.
 
-For other things, we while we will try not to break things without good reason,
+For other things, while we will try not to break things without good reason,
 at this point we are not documenting or guaranteeing API stability for these
 functions. Please contribute to `the discussion
 <https://github.com/spookylukey/pyastgrep/discussions/18>`_ if you have needs
