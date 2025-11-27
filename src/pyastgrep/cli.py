@@ -156,7 +156,7 @@ option, which is typically ~/.config/git/ignore or
 parser.add_argument(
     "--no-ignore-vcs",
     help="""Don't respect filter rules from version control ignore
-files such as .gitignore
+    files such as .gitignore
     """,
     action="store_true",
     default=False,
