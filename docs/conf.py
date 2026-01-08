@@ -7,9 +7,9 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "pyastgrep"
-copyright = "2023, Luke Plant"
+copyright = "2023-2026, Luke Plant"
 author = "Luke Plant"
-release = "1.5"
+release = "1.6"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
