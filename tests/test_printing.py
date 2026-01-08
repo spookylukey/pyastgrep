@@ -322,3 +322,9 @@ def test_coloring_heading():
         f"# {Colors.MAGENTA}colors.py{Styles.END}:{Colors.GREEN}1{Styles.END}:\n"
         f"def foo({Colors.RED}{Styles.BOLD}arg1{Styles.END}, arg2):\n"
     )
+
+
+def test_coloring_for_nodes_without_lineno():
+    # Any 'load' value (lvalue) has `Load` nodes that don't have 'lineno'
+    output = run_print(DIR, ".//*", ["loadvalue.py"], colorer=make_default_colorer())
+    assert output.stderr == ""
