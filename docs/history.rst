@@ -2,6 +2,12 @@
 History
 =======
 
+Version 1.6 - 2025-01-08
+------------------------
+
+* Fixed crasher with XPath expression that matched AST nodes that don’t have a
+  ``.lineno`` attribute `#25 <https://github.com/spookylukey/pyastgrep/issues/25>`_
+
 Version 1.5 - 2025-03-28
 ------------------------
 
