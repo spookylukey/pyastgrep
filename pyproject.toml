@@ -107,4 +107,5 @@ dev = [
     "sphinx-rtd-theme>=3.0.2",
     "tox>=4.25.0",
     "tox-uv>=1.25.0",
+    "ipython>=8.18.1",
 ]
