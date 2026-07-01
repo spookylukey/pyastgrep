@@ -25,7 +25,7 @@ from pathlib import Path
 from typing import Any, Iterable, Union, overload
 
 from pathspec import GitIgnoreSpec, PathSpec
-from pathspec.patterns.gitwildmatch import GitWildMatchPattern
+from pathspec.patterns.gitignore.spec import GitIgnoreSpecPattern
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ def add_negative_dir_pattern(pathspec: DirectoryPathSpec, directory: Path) -> Di
 def add_negative_dir_pattern(pathspec: PathSpec | DirectoryPathSpec, directory: Path) -> PathSpec | DirectoryPathSpec:
     if isinstance(pathspec, DirectoryPathSpec):
         return DirectoryPathSpec(pathspec.location, add_negative_dir_pattern(pathspec.pathspec, directory))
-    return pathspec.__class__(list(pathspec.patterns) + [GitWildMatchPattern(f"!{directory}/")])
+    return pathspec.__class__(list(pathspec.patterns) + [GitIgnoreSpecPattern(f"!{directory}/")])
 
 
 class DirWalker:
@@ -137,7 +137,7 @@ class DirWalker:
                 # TODO we should probably use a different mechanism for hidden
                 # files, this causes problems and doesn't cope with Windows
                 # hidden files.
-                pathspecs.append(PathSpec([GitWildMatchPattern(".*")]))
+                pathspecs.append(PathSpec([GitIgnoreSpecPattern(".*")]))
         self.pathspecs: list[PathSpecLike] = pathspecs
         self.start_directory: Path | None = start_directory
         self.working_dir: Path | None = working_dir

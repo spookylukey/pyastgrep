@@ -23,7 +23,7 @@ dependencies = [
     "lxml>=3.3.5",
     "elementpath",
     "astpretty",
-    "pathspec",
+    "pathspec>=1.1.1",
     "cssselect>=1.2",
     'backports.strenum; python_version < "3.11"',
     "typing-extensions>=4.12.2",
