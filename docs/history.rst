@@ -2,6 +2,11 @@
 History
 =======
 
+Version 1.7 - 2026-07-01
+------------------------
+
+* Fix deprecation warning from pathspec.
+
 Version 1.6 - 2025-01-08
 ------------------------
 
